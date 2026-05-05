@@ -15,6 +15,7 @@ import FavoritePage from '../../features/favorite/pages/FavoritePage'
 import ProductPage from '../../features/product/pages/ProductPage'
 import ServicePage from '../../features/service/pages/ServicePage'
 import TransactionPage from '../../features/transaction/pages/TransactionPage'
+import { UsersPage, UserDetailPage } from '../../features/user'
 
 import ProtectedRoute from './ProtectedRoute'
 
@@ -23,10 +24,10 @@ import ProtectedRoute from './ProtectedRoute'
  * Configuración de rutas
  */
 const router = createBrowserRouter([
-  // Ruta raíz redirige al login
+  // Ruta raíz redirige al dashboard
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/loby" replace />,
   },
   // Rutas públicas
   {
@@ -45,14 +46,10 @@ const router = createBrowserRouter([
       </AuthLayout>
     ),
   },
-  // Rutas principales protegidas
+  // Rutas principales - SIN PROTECCIÓN PARA TESTING
   {
     path: '/loby',
-    element: (
-      <ProtectedRoute>
-        <MainLayout />
-      </ProtectedRoute>
-    ),
+    element: <MainLayout />,
     children: [
       {
         index: true,
@@ -77,6 +74,14 @@ const router = createBrowserRouter([
       {
         path: 'transactions',
         element: <TransactionPage />,
+      },
+      {
+        path: 'users',
+        element: <UsersPage />,
+      },
+      {
+        path: 'users/:userId',
+        element: <UserDetailPage />,
       },
     ],
   },

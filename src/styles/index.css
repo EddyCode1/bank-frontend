@@ -1,15 +1,42 @@
 @import 'tailwindcss';
 
 :root {
-  --bg: #E2DFCE;
-  --surface: #FFFFFF;
-  --surface-dark: #2F2F2F;
-  --primary: #517360;
-  --accent: #A66F5B;
-  --accent-soft: #DDB7A2;
-  --text: #2F2F2F;
-  --muted: #7A7A79;
-  --danger: #b02a2a;
+  /* Paleta de colores actualizada */
+  /* Azules (base de confianza) */
+  --azul-profundo: #1F2A44;
+  --azul-medio: #2C4A7A;
+  --azul-vibrante: #2F7FBF;
+  
+  /* Verdes (finanzas / crecimiento) */
+  --verde-jade: #1FA187;
+  --verde-medio: #2CB67D;
+  --verde-claro: #7ED7C1;
+  
+  /* Naranjas / Rojos (acento energético) */
+  --naranja-principal: #F97316;
+  --naranja-rojizo: #EF4444;
+  --coral-suave: #FB7185;
+  
+  /* Grises */
+  --blanco-puro: #FFFFFF;
+  --gris-claro-fondo: #F5F7FA;
+  --gris-medio: #94A3B8;
+  --gris-oscuro: #1E293B;
+  
+  /* Asignaciones de variables */
+  --primary: var(--azul-medio);
+  --primary-dark: var(--azul-profundo);
+  --primary-light: var(--azul-vibrante);
+  --secondary: var(--verde-jade);
+  --secondary-light: var(--verde-claro);
+  --accent: var(--naranja-principal);
+  --success: var(--verde-medio);
+  --danger: var(--naranja-rojizo);
+  --warning: var(--coral-suave);
+  --bg: var(--gris-claro-fondo);
+  --surface: var(--blanco-puro);
+  --text: var(--gris-oscuro);
+  --muted: var(--gris-medio);
 }
 
 /* Estilos globales personalizados */
