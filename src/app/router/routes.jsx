@@ -18,7 +18,6 @@ import TransactionPage from '../../features/transaction/pages/TransactionPage'
 
 import ProtectedRoute from './ProtectedRoute'
 
-
 /**
  * Configuración de rutas
  */
@@ -67,7 +66,7 @@ const router = createBrowserRouter([
         element: <FavoritePage />,
       },
       {
-        path: 'products',
+        path: 'product', // Ahora es hijo de /loby, la ruta será /loby/product
         element: <ProductPage />,
       },
       {
