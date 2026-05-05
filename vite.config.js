@@ -14,8 +14,8 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      '/GestorRestaurante': {
-        target: process.env.VITE_API_URL || 'http://localhost:3006',
+      '/SistemaBancarioAdmin': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },

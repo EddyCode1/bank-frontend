@@ -17,7 +17,6 @@ const useAuthStore = create(
 
       getToken: () => get().token,
       getUser: () => get().user,
-      isAuthenticated: () => get().isAuthenticated,
     }),
     {
       name: 'auth-storage',

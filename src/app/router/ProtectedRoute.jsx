@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import useAuthStore from '../../shared/stores/useAuthStore'
+import useAuthStore from '../../features/auth/store/useAuthStore'
 
 /**
  * Componente ProtectedRoute

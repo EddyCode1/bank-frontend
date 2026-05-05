@@ -1,4 +1,4 @@
-import authClient from '../authClient'
+import authClient from '../../../shared/api/authClient'
 import toast from 'react-hot-toast'
 
 export const authService = {

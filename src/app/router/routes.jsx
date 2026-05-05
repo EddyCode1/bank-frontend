@@ -7,13 +7,10 @@ import AuthLayout from '../layouts/AuthLayout'
 // Páginas públicas
 import LoginPage from '../../features/auth/pages/LoginPage'
 import RegisterPage from '../../features/auth/pages/RegisterPage'
-import NotFoundPage from '../../features/common/pages/NotFoundPage'
-import UnauthorizedPage from '../../features/common/pages/UnauthorizedPage'
 
 // Páginas principales
 import DashboardPage from '../../features/dashboard/pages/DashboardPage'
 import AccountPage from '../../features/account/pages/AccountPage'
-import ProfilePage from '../../features/account/pages/ProfilePage'
 import FavoritePage from '../../features/favorite/pages/FavoritePage'
 import ProductPage from '../../features/product/pages/ProductPage'
 import ServicePage from '../../features/service/pages/ServicePage'
@@ -81,19 +78,11 @@ const router = createBrowserRouter([
         path: 'transactions',
         element: <TransactionPage />,
       },
-      {
-        path: 'profile',
-        element: (
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        ),
-      },
     ],
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: <Navigate to="/" replace />,
   },
 ])
 

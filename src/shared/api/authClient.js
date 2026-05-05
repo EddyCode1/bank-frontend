@@ -1,5 +1,5 @@
 import axios from 'axios'
-import useAuthStore from '../stores/useAuthStore'
+import useAuthStore from '../../features/auth/store/useAuthStore'
 
 // Instancia cliente para autenticación
 const authClient = axios.create({

@@ -1,1 +1,2 @@
-// Product feature exports
+// Product Pages
+export { default as ProductPage } from './pages/ProductPage'

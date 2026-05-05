@@ -1,1 +1,3 @@
-// Service feature exports
+// Service Pages
+export { default as ServicePage } from './pages/ServicePage'
+
