@@ -16,7 +16,7 @@ import ProductPage from '../../features/product/pages/ProductPage'
 import ServicePage from '../../features/service/pages/ServicePage'
 import TransactionPage from '../../features/transaction/pages/TransactionPage'
 
-import ProtectedRoute from './ProtectedRoute'
+// Removed ProtectedRoute to allow open access during testing
 
 /**
  * Configuración de rutas
@@ -44,14 +44,10 @@ const router = createBrowserRouter([
       </AuthLayout>
     ),
   },
-  // Rutas principales protegidas
+  // Rutas principales (ahora sin protección)
   {
     path: '/loby',
-    element: (
-      <ProtectedRoute>
-        <MainLayout />
-      </ProtectedRoute>
-    ),
+    element: <MainLayout />,
     children: [
       {
         index: true,

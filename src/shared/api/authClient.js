@@ -47,8 +47,10 @@ authClient.interceptors.response.use(
           return authClient(originalRequest)
         }
       } catch (refreshError) {
+        // Durante pruebas no forzamos redirección automática al login
+        // para evitar que vistas públicas que hacen requests se redirijan.
         useAuthStore.getState().logout()
-        window.location.href = '/login'
+        // Nota: no hacemos `window.location.href = '/login'` aquí
       }
     }
 
