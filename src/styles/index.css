@@ -1,15 +1,16 @@
 @import 'tailwindcss';
 
 :root {
-  --bg: #E2DFCE;
-  --surface: #FFFFFF;
-  --surface-dark: #2F2F2F;
-  --primary: #517360;
-  --accent: #A66F5B;
-  --accent-soft: #DDB7A2;
-  --text: #2F2F2F;
-  --muted: #7A7A79;
-  --danger: #b02a2a;
+  --primary: #5B5CF6;
+  --secondary: #22C55E;
+  --bg: #FFFFFF;
+  --surface: #F8FAFC;
+  --border: #E5E7EB;
+  --text: #0F172A;
+  --muted: #64748B;
+  --ai-gradient-start: #5B5CF6;
+  --ai-gradient-end: #A855F7;
+  --danger: #EF4444;
 }
 
 /* Estilos globales personalizados */
@@ -76,30 +77,32 @@ html {
 }
 
 .btn-primary:hover {
-  background: #446b5b;
+  background: #4A4BE0;
 }
 
 .btn-secondary {
   @apply px-4 py-2 rounded-lg font-semibold transition;
-  background: var(--accent-soft);
-  color: var(--text);
+  background: var(--secondary);
+  color: #ffffff;
 }
 
 .btn-secondary:hover {
-  background: #c1937e;
+  background: #1BAA4D;
 }
 
 .input-base {
   @apply w-full px-4 py-2 rounded-lg outline-none;
-  border: 1px solid var(--accent-soft);
+  border: 1px solid var(--border);
+  background: #ffffff;
 }
 
 .input-base:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(81, 115, 96, 0.12);
+  box-shadow: 0 0 0 4px rgba(91, 92, 246, 0.14);
 }
 
 .card {
   @apply rounded-lg shadow p-6;
   background: var(--surface);
+  border: 1px solid var(--border);
 }

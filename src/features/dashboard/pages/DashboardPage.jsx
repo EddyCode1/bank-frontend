@@ -11,25 +11,35 @@ const items = [
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <main className="w-full max-w-3xl p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Banco</h1>
+    <div className="space-y-6">
+      <section className="rounded-3xl bg-gradient-to-r from-[var(--ai-gradient-start)] to-[var(--ai-gradient-end)] p-6 text-white shadow-[0_20px_40px_-24px_rgba(91,92,246,0.7)] sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+          Bienvenido
+        </p>
+        <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl">
+          Tu bienestar financiero es nuestro trabajo
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm text-white/90 sm:text-base">
+          Explora tus cuentas, movimientos y servicios de forma segura y sin complicaciones.
+        </p>
+      </section>
 
-        <p className="text-center text-gray-600 mb-6">Selecciona una sección para continuar.</p>
+      <section className="rounded-3xl border border-[var(--border)] bg-white p-5 shadow-sm sm:p-6">
+        <h2 className="text-xl font-bold text-[var(--text)] sm:text-2xl">Accesos rápidos</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">Selecciona una sección para continuar.</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it) => (
             <Link
               key={it.id}
               to={it.path}
-              className="block w-full text-center py-3 border rounded-lg bg-white hover:bg-gray-50 text-gray-900 shadow-sm"
+              className="block w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center font-medium text-[var(--text)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
             >
               {it.label}
             </Link>
           ))}
         </div>
-
-      </main>
+      </section>
     </div>
   )
 }
