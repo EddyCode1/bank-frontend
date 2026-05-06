@@ -9,7 +9,8 @@ export default function ProductPage() {
   const [editingProduct, setEditingProduct] = useState(null)
 
   const user = useAuthStore((state) => state.user)
-  const isAdmin = user?.role === 'ADMIN' || !user
+  // En desarrollo permitimos crear para pruebas aunque no haya un admin autenticado
+  const isAdmin = import.meta.env.DEV ? true : (user?.role === 'ADMIN')
 
   const {
     products = [],
