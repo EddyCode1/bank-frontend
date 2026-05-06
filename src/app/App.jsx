@@ -2,9 +2,6 @@ import { Toaster } from 'react-hot-toast'
 import { RouterProvider } from 'react-router-dom'
 import router from './router/routes'
 
-/**
- * Componente principal de la aplicación
- */
 function App() {
   return (
     <>

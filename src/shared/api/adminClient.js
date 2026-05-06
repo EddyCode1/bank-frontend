@@ -1,7 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 
-
 const adminClient = axios.create({
   baseURL: import.meta.env.VITE_ADMIN_URL,
   headers: {
@@ -9,15 +8,14 @@ const adminClient = axios.create({
   },
 })
 
-// Interceptor para requests
 adminClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().getToken()
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      // Cambiado de 'Authorization' a 'x-token' para match con tu Backend
+      config.headers['x-token'] = token 
     }
     
-    // Si es FormData, no establecer Content-Type (axios lo hace automáticamente)
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type']
     }
@@ -26,7 +24,6 @@ adminClient.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 )
-
 
 adminClient.interceptors.response.use(
   (response) => response,
