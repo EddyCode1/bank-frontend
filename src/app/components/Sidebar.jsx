@@ -52,7 +52,7 @@ const Sidebar = () => {
             onMouseEnter={(e) => e.target.style.backgroundColor = '#1FA187' || (e.target.style.color = '#FFFFFF')}
             onMouseLeave={(e) => e.target.style.backgroundColor = '#DCF3EE' || (e.target.style.color = '#1FA187')}
           >
-            📦 Productos
+           Productos
           </Link>
           <Link
             to="/loby/services"
@@ -82,7 +82,7 @@ const Sidebar = () => {
           onMouseEnter={(e) => e.target.style.backgroundColor = '#DC2626'}
           onMouseLeave={(e) => e.target.style.backgroundColor = '#EF4444'}
         >
-          🚪 Cerrar Sesión
+         Cerrar Sesión
         </button>
       </div>
     </aside>
