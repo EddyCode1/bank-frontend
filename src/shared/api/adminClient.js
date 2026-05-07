@@ -2,7 +2,7 @@ import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 
 const adminClient = axios.create({
-  baseURL: import.meta.env.VITE_ADMIN_URL,
+  baseURL: import.meta.env.VITE_PRODUCT_URL || import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -9,7 +9,8 @@ export default function ProductPage() {
   const [editingProduct, setEditingProduct] = useState(null)
 
   const user = useAuthStore((state) => state.user)
-  const isAdmin = user?.role === 'ADMIN' || !user
+  const userRole = user?.rol || user?.role || ''
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMIN_ROLE'
 
   const {
     products = [],
