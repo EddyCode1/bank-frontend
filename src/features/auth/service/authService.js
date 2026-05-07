@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 export const authService = {
   login: async (email, password) => {
     try {
-      const response = await authClient.post('/login', { email, password })
+      const response = await authClient.post('/login', { emailOrUsername: email, password })
       const data = response.data || {}
       const token = data.token
       const userDetails = data.data || data.userDetails || data.user || {}
