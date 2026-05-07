@@ -1,12 +1,8 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 
-const baseURL = import.meta.env.DEV
-  ? '/SistemaBancarioAdmin/v1/admin'
-  : import.meta.env.VITE_ADMIN_URL
-
 const adminClient = axios.create({
-  baseURL,
+  baseURL: import.meta.env.VITE_PRODUCT_URL || import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,10 +30,7 @@ adminClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout()
-      // En desarrollo no forzamos la redirección automática al login
-      if (!import.meta.env.DEV) {
-        window.location.href = '/login'
-      }
+      window.location.href = '/login'
     }
     return Promise.reject(error)
   }

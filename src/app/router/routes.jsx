@@ -62,7 +62,7 @@ const router = createBrowserRouter([
         element: <FavoritePage />,
       },
       {
-        path: 'product', // Ahora es hijo de /loby, la ruta será /loby/product
+        path: 'products', // Ahora es hijo de /loby, la ruta será /loby/products
         element: <ProductPage />,
       },
       {

@@ -1,10 +1,19 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 
 /**
- * Sidebar simplificado: solo botones para probar vistas.
+ * Sidebar principal con navegación bancaria.
  */
-const Sidebar = () => {
+const menuItems = [
+  { to: '/loby', label: 'Panel general', icon: '▦' },
+  { to: '/loby/account', label: 'Cuentas', icon: '◉' },
+  { to: '/loby/transactions', label: 'Transacciones', icon: '⇄' },
+  { to: '/loby/products', label: 'Productos', icon: '◫' },
+  { to: '/loby/services', label: 'Servicios', icon: '◌' },
+  { to: '/loby/favorites', label: 'Favoritos', icon: '★' },
+]
+
+const Sidebar = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuthStore()
   const navigate = useNavigate()
 
@@ -14,78 +23,60 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="w-56 p-4" style={{backgroundColor: '#F5F7FA', borderRight: '1px solid #E0E7FF', minHeight: '100vh'}}>
-      <div className="mb-8">
-        <h2 className="text-lg font-bold mb-4" style={{color: '#1E293B'}}>Menú</h2>
+    <>
+      <div
+        className={`fixed inset-0 z-30 bg-[var(--text)]/30 transition-opacity lg:hidden ${
+          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        onClick={onClose}
+      />
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-[var(--border)] bg-white p-5 shadow-xl transition-transform lg:static lg:translate-x-0 lg:shadow-none ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="mb-8 border-b border-[var(--border)] pb-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--secondary)]">
+            Visual Banco
+          </p>
+          <h2 className="mt-2 text-xl font-bold text-[var(--text)]">Mesa financiera</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {user?.nombre ? `Bienvenido, ${user.nombre}` : 'Bienvenido'}
+          </p>
+        </div>
+
         <nav className="space-y-2">
-          <Link
-            to="/loby"
-            className="block px-4 py-2 rounded-lg transition"
-            style={{color: '#2C4A7A'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#E0E7FF'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Dashboard
-          </Link>
-          <Link
-            to="/loby/account"
-            className="block px-4 py-2 rounded-lg transition"
-            style={{color: '#2C4A7A'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#E0E7FF'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Mi Cuenta
-          </Link>
-          <Link
-            to="/loby/favorites"
-            className="block px-4 py-2 rounded-lg transition"
-            style={{color: '#2C4A7A'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#E0E7FF'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Favoritos
-          </Link>
-          <Link
-            to="/loby/product"
-            className="block px-4 py-2 rounded-lg transition font-medium"
-            style={{color: '#1FA187', backgroundColor: '#DCF3EE'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#1FA187' || (e.target.style.color = '#FFFFFF')}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#DCF3EE' || (e.target.style.color = '#1FA187')}
-          >
-           Productos
-          </Link>
-          <Link
-            to="/loby/services"
-            className="block px-4 py-2 rounded-lg transition"
-            style={{color: '#2C4A7A'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#E0E7FF'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Servicios
-          </Link>
-          <Link
-            to="/loby/transactions"
-            className="block px-4 py-2 rounded-lg transition"
-            style={{color: '#2C4A7A'}}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#E0E7FF'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Transacciones
-          </Link>
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onClose}
+              end={item.to === '/loby'}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-[var(--primary)] text-white shadow-sm'
+                    : 'text-[var(--text)] hover:bg-[var(--surface)]'
+                }`
+              }
+            >
+              <span className="inline-flex w-5 justify-center text-xs">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
         </nav>
-      </div>
-      <div className="mt-auto pt-4" style={{borderTop: '1px solid #E0E7FF'}}>
-        <button
-          onClick={handleLogout}
-          className="w-full px-3 py-2 text-white rounded-lg transition font-medium"
-          style={{backgroundColor: '#EF4444'}}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#DC2626'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#EF4444'}
-        >
-         Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+
+        <div className="mt-8 border-t border-[var(--border)] pt-5">
+          <button
+            onClick={handleLogout}
+            className="w-full rounded-xl bg-[var(--danger)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#DC2626]"
+          >
+            Cerrar sesión segura
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
 
