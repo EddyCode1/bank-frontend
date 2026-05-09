@@ -3,6 +3,10 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 
+import ProfileButton from '../../features/account/components/ProfileButton'
+import useAuthStore from '../../features/auth/store/useAuthStore'
+import { useNavigate } from 'react-router-dom'
+
 /**
  * Layout principal con Sidebar
  * Usado en rutas protegidas
@@ -35,6 +39,25 @@ const MainLayout = () => {
             <Outlet />
           </div>
         </main>
+
+        {/* Botón de perfil fijo con menú */}
+        {(() => {
+          const navigate = useNavigate();
+          const user = useAuthStore.getState().user;
+          const logout = useAuthStore.getState().logout;
+          return (
+            <ProfileButton
+              imageUrl={user?.profilePicture}
+              email={user?.email}
+              onEditProfile={() => navigate('/loby/profile')}
+              onLogout={() => {
+                logout();
+                navigate('/login');
+              }}
+              onChangePhoto={() => navigate('/loby/profile?editPhoto=1')}
+            />
+          );
+        })()}
       </div>
     </div>
   )
