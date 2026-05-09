@@ -28,13 +28,15 @@ Crear archivo `.env.local` basado en `.env.example`:
 cp .env.example .env.local
 ```
 
-Editar `.env.local` con las URLs de tu backend:
+Editar `.env.local` con las URLs de tus backends:
 
 ```env
-# Local (puerto 3000 donde corre el backend Node.js)
+# Auth en 5025, productos/servicios en 3000
+VITE_AUTH_URL=http://localhost:5025/api/v1/auth
+VITE_PRODUCT_URL=http://localhost:3000
+
+# Alias genérico opcional
 VITE_API_URL=http://localhost:3000
-VITE_AUTH_URL=http://localhost:3000/GestorRestaurante/v1/auth
-VITE_ADMIN_URL=http://localhost:3000/GestorRestaurante/v1
 
 VITE_APP_NAME=Gestor de Restaurante
 VITE_APP_VERSION=1.0.0
@@ -67,13 +69,12 @@ pnpm lint
 
 ## 🔗 Conectar con Backend
 
-El frontend está configurado para conectarse al backend en:
-- **Desarrollo**: `http://localhost:3000`
-- **Staging**: `https://api-staging.tudominio.com`
-- **Producción**: `https://api.tudominio.com`
+El frontend está configurado para conectarse a dos servicios distintos:
+- **Auth**: `http://localhost:5025`
+- **Products/Services**: `http://localhost:3000`
 
 ### Proxy automático en desarrollo
-Vite incluye un proxy que redirige llamadas a `/GestorRestaurante/*` al backend.
+Vite incluye un proxy que redirige llamadas al backend correspondiente según la variable de entorno usada por cada cliente.
 
 ### En producción
 La API debe servirse desde el mismo dominio o tener CORS configurado correctamente en el backend.
