@@ -39,4 +39,12 @@ adminClient.interceptors.response.use(
   }
 )
 
+// Cliente público sin autenticación
+export const publicClient = axios.create({
+  baseURL: import.meta.env.VITE_ADMIN_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
 export default adminClient
