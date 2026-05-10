@@ -1,11 +1,15 @@
-
 import { useState, useRef, useEffect } from 'react'
 import './ProfileButton.css'
-import defaultProfile from '/src/assets/default-profile.png';
+import defaultProfile from '/src/assets/default-profile.png'
 
 const ProfileButton = ({ imageUrl, email, onEditProfile, onLogout, onChangePhoto }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef();
+  const [open, setOpen] = useState(false)
+  const [avatarSrc, setAvatarSrc] = useState(imageUrl?.trim() ? imageUrl : defaultProfile)
+  const ref = useRef()
+
+  useEffect(() => {
+    setAvatarSrc(imageUrl?.trim() ? imageUrl : defaultProfile)
+  }, [imageUrl])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -25,22 +29,24 @@ const ProfileButton = ({ imageUrl, email, onEditProfile, onLogout, onChangePhoto
         aria-label="Perfil de usuario"
         type="button"
       >
-        {imageUrl && imageUrl.trim() !== '' ? (
-          <img src={imageUrl} alt="Perfil" className="profile-img" />
-        ) : (
-          <img src={defaultProfile} alt="Perfil por defecto" className="profile-img" />
-        )}
+        <img
+          src={avatarSrc}
+          alt=""
+          className="profile-img"
+          onError={() => setAvatarSrc(defaultProfile)}
+        />
       </button>
       {open && (
         <div className="profile-dropdown profile-dropdown-wide">
           {/* Correo arriba */}
           {email && <div className="profile-dropdown-email">{email}</div>}
           {/* Foto de perfil */}
-          {imageUrl && imageUrl.trim() !== '' ? (
-            <img src={imageUrl} alt="Perfil" className="profile-dropdown-img" />
-          ) : (
-            <img src={defaultProfile} alt="Perfil por defecto" className="profile-dropdown-img" />
-          )}
+          <img
+            src={avatarSrc}
+            alt=""
+            className="profile-dropdown-img"
+            onError={() => setAvatarSrc(defaultProfile)}
+          />
           {/* Cambiar foto */}
           <button className="profile-dropdown-link" onClick={onChangePhoto}>
             Cambiar foto

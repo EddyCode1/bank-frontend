@@ -1,83 +1,62 @@
-## 🧪 Instrucciones para Probar la Funcionalidad de Usuarios
+# Testing — Cuenta Admin
 
-### ✅ Cambios realizados para el testing:
+## Cuenta de administrador (sembrada por el backend)
 
-1. **Usuario Mock**: Se agregó un usuario `ADMIN_ROLE` en el auth store
-   - Email: `admin@banco.com`
-   - Usuario: `admin`
-   - Rol: `ADMIN_ROLE` (tiene acceso a la sección de administración)
+| Campo      | Valor            |
+|------------|------------------|
+| Usuario    | `ADMINB`         |
+| Email      | `admin@bank.com` |
+| Contraseña | `ADMINB`         |
+| Rol        | `ADMIN_ROLE`     |
 
-2. **Rutas sin protección**: Removimos ProtectedRoute del layout principal para acceso directo
+El seeder (`AdminSeed.cs`) crea esta cuenta al arrancar la API si no existe.
 
-3. **Datos Mock**: Se creó un conjunto de 5 usuarios con cuentas asociadas en `adminClient.js`
-   - Los usuarios tienen nombres, emails, teléfonos, roles
-   - Algunas cuentas inactivas para probar estados
+---
 
-### 🚀 Cómo probar:
+## Cómo funciona el testing de usuarios
 
-#### Opción 1: Acceso directo (Recomendado)
-```
-http://localhost:5173/loby/users
-```
-- Se abre directamente la página de usuarios
-- No necesitas login ni token válido
+El módulo de **Usuarios** tiene comportamiento distinto según la cuenta con la
+que se ingrese.
 
-#### Opción 2: Ver detalle de un usuario
-Haz clic en "Ver detalle" en cualquier usuario de la tabla, o accede directamente:
-```
-http://localhost:5173/loby/users/user-001
-```
+### Lógica por cuenta
 
-#### Opción 3: Dashboard completo
-```
-http://localhost:5173/loby
-```
-- Se ve el sidebar con el menú
-- El menú de "Administración → Usuarios" solo aparece para admins
+- **Login con `ADMINB` / `admin@bank.com`** → se muestran siempre los
+  **5 usuarios de ejemplo** con sus cuentas bancarias (modo testing).
+- **Login con cualquier otro usuario admin** → se muestran los usuarios
+  reales que devuelve el backend.
 
-### 📋 Pruebas que puedes hacer:
+### Usuarios de ejemplo (heredados de `ft/kevin`)
 
-1. **Lista de usuarios**
-   - [ ] Carga la tabla con 5 usuarios
-   - [ ] Búsqueda en tiempo real (por nombre, email, usuario)
-   - [ ] Se muestra el total de usuarios
+| # | Nombre                | Usuario     | Cuentas |
+|---|-----------------------|-------------|---------|
+| 1 | Juan García López     | jgarcia     | 2       |
+| 2 | María Rodríguez Pérez | mrodriguez  | 1       |
+| 3 | Carlos Martínez S.    | cmartinez   | 3       |
+| 4 | Ana Fernández López   | afernandez  | 1       |
+| 5 | Pedro González López  | pgonzalez   | 0       |
 
-2. **Detalle de usuario**
-   - [ ] Carga los datos personales correctamente
-   - [ ] Tab "Cuentas" muestra las cuentas asociadas
-   - [ ] Estados de las cuentas con colores (activa/inactiva)
-   - [ ] Botón "Volver" regresa a la lista
+Al hacer clic en **Ver** de cualquier usuario de ejemplo, la pestaña
+**Cuentas** muestra sus cuentas con número, tipo, saldo y estado.
 
-3. **Comportamiento**
-   - [ ] Sin errores en la consola
-   - [ ] Loader aparece mientras carga
-   - [ ] Navegación funciona correctamente
+---
 
-### 🔧 Para volver a producción:
+## Flujo de prueba
 
-Cuando tengas el backend funcional y login real, deberás:
+### 1. Iniciar servicios
+- API:      `http://localhost:3000`
+- Frontend: `http://localhost:5173`
 
-1. **En `src/app/router/routes.jsx`**: Volver a activar `ProtectedRoute`
-   ```jsx
-   {
-     path: '/loby',
-     element: (
-       <ProtectedRoute>
-         <MainLayout />
-       </ProtectedRoute>
-     ),
-   ```
+### 2. Login
+Ir a `http://localhost:5173/login` e ingresar:
+- Usuario: `ADMINB`
+- Contraseña: `ADMINB`
 
-2. **En `src/features/auth/store/useAuthStore.js`**: Remover el usuario mock
-   - Cambiar `token: MOCK_TOKEN` → `token: null`
-   - Cambiar `user: MOCK_USER` → `user: null`
-   - Cambiar `isAuthenticated: true` → `isAuthenticated: false`
+### 3. Navegar al módulo de Usuarios
+Ruta: `/loby/users`
 
-3. **En `src/shared/api/adminClient.js`**: Remover el interceptor mock
-   - Eliminar la sección de MOCK_USERS y el manejo de errores de mock
+Aparecerán los 5 usuarios de ejemplo de Kevin.
 
-### 📝 Notas:
-
-- Los datos están siendo mockeados en `src/shared/api/adminClient.js`
-- Cuando conectes con el backend real, el interceptor ignorará los endpoints reales
-- El usuario tiene rol `ADMIN_ROLE` para ver la sección de administración
+### 4. Ver detalle
+Hacer clic en **Ver** de cualquier usuario para ver:
+- Pestaña **Datos Personales**: nombre, email, teléfono, rol, dirección
+- Pestaña **Cuentas**: cuentas bancarias con saldo y estado

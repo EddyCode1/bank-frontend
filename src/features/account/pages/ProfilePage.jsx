@@ -1,13 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/useAuthStore'
+import { authService } from '../../auth/service/authService'
 import defaultProfile from '/src/assets/default-profile.png'
 import { resizeImageToDataUrl } from '../../../shared/utils/resizeProfileImage'
 
 /**
  * Perfil del usuario: datos de sesión y foto persistida en este dispositivo (localStorage).
- * Cuando exista endpoint de subida en el backend, se puede enviar el archivo allí y usar la URL devuelta.
  */
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user)
@@ -21,6 +21,28 @@ export default function ProfilePage() {
     }
   }, [searchParams])
 
+  const [photoSrc, setPhotoSrc] = useState(user?.profilePicture?.trim() ? user.profilePicture : defaultProfile)
+
+  useEffect(() => {
+    setPhotoSrc(user?.profilePicture?.trim() ? user.profilePicture : defaultProfile)
+  }, [user?.profilePicture])
+
+  useEffect(() => {
+    let mounted = true
+
+    // Sincroniza perfil completo desde backend para evitar campos vacios tras hidratar sesión vieja.
+    const syncProfileFromBackend = async () => {
+      const result = await authService.getCurrentUser()
+      if (!mounted || !result.success || !result.user) return
+      patchUser(result.user)
+    }
+
+    void syncProfileFromBackend()
+    return () => {
+      mounted = false
+    }
+  }, [patchUser])
+
   const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -32,6 +54,7 @@ export default function ProfilePage() {
     try {
       const dataUrl = await resizeImageToDataUrl(file, 512, 0.82)
       patchUser({ profilePicture: dataUrl })
+      setPhotoSrc(dataUrl)
       toast.success('Foto guardada en este dispositivo')
     } catch (err) {
       toast.error(err?.message || 'No se pudo procesar la imagen')
@@ -39,8 +62,6 @@ export default function ProfilePage() {
 
     e.target.value = ''
   }
-
-  const displaySrc = user?.profilePicture || defaultProfile
 
   return (
     <div className="space-y-6">
@@ -66,9 +87,10 @@ export default function ProfilePage() {
           </h2>
           <div className="mt-4 flex justify-center">
             <img
-              src={displaySrc}
+              src={photoSrc}
               alt=""
               className="h-36 w-36 rounded-2xl border border-[var(--border)] object-cover shadow-sm"
+              onError={() => setPhotoSrc(defaultProfile)}
             />
           </div>
           <label className="mt-6 flex cursor-pointer justify-center">
@@ -78,8 +100,7 @@ export default function ProfilePage() {
             <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           </label>
           <p className="mt-3 text-center text-xs text-[var(--muted)]">
-            Se guarda localmente (JPEG optimizado). Si tu backend expone subida de avatar, podremos
-            sincronizar con el servidor.
+            Se guarda localmente (JPEG optimizado).
           </p>
         </div>
 

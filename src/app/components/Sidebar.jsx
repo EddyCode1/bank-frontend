@@ -8,7 +8,6 @@ import LogoEmblem from './LogoEmblem'
 const menuItems = [
   { to: '/loby', label: 'Panel general', icon: '▦' },
   { to: '/loby/account', label: 'Cuentas', icon: '◉' },
-  { to: '/loby/profile', label: 'Mi perfil', icon: '◇' },
   { to: '/loby/transactions', label: 'Transacciones', icon: '⇄' },
   { to: '/loby/products', label: 'Productos', icon: '◫' },
   { to: '/loby/services', label: 'Servicios', icon: '◌' },

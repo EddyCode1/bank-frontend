@@ -1,108 +1,121 @@
-import adminClient from '../../../shared/api/adminClient'
+import adminClient, { publicClient, MOCK_USERS } from '../../../shared/api/adminClient'
+import useAuthStore from '../../../features/auth/store/useAuthStore'
 
 /**
- * Genera un número de cuenta aleatorio de 10 dígitos
+ * Adapta la respuesta del backend (name, surname, phone, role) al modelo
+ * que usan las vistas (nombre, telefono, rol, cuentas).
  */
-export const generateAccountNumber = () => {
-  return Math.floor(1000000000 + Math.random() * 9000000000).toString()
+function mapUser(raw) {
+  if (!raw) return null
+  return {
+    ...raw,
+    nombre: [raw.name, raw.surname].filter(Boolean).join(' ') || raw.nombre || '',
+    telefono: raw.phone || raw.telefono || '',
+    rol: raw.role || raw.rol || 'USER_ROLE',
+    cuentas: raw.cuentas || [],
+  }
 }
 
+/** Detecta si la sesión activa corresponde a la cuenta de testing */
+function isTestingAdmin() {
+  const user = useAuthStore.getState().getUser()
+  return user?.username === 'ADMINB' || user?.email === 'admin@bank.com'
+}
+
+export const generateAccountNumber = () =>
+  Math.floor(1000000000 + Math.random() * 9000000000).toString()
+
 /**
- * Obtiene todos los usuarios (ADMIN)
+ * Obtiene todos los usuarios (ADMIN).
+ * Cuando la sesión es la cuenta de testing (ADMINB) se devuelven los
+ * usuarios de ejemplo para poder probar el módulo sin datos reales.
  */
 export const getUsers = async () => {
+  if (isTestingAdmin()) {
+    return { success: true, data: MOCK_USERS }
+  }
   try {
     const response = await adminClient.get('/users')
-    // Manejar diferentes estructuras de respuesta del backend
-    const data = response.data.data || response.data.users || response.data || []
-    return {
-      success: true,
-      data: Array.isArray(data) ? data : []
-    }
+    const raw = response.data?.data ?? response.data
+    const items = Array.isArray(raw) ? raw : (raw?.items ?? [])
+    return { success: true, data: items.map(mapUser) }
   } catch (error) {
     console.error('Error fetching users:', error)
-    return {
-      success: false,
-      data: [],
-      error: error.response?.data?.message || error.message
-    }
+    return { success: false, data: [], error: error.response?.data?.message || error.message }
   }
 }
 
 /**
- * Obtiene un usuario por ID (ADMIN)
+ * Obtiene un usuario por ID (ADMIN).
+ * Con la cuenta de testing devuelve el usuario mock correspondiente.
  */
 export const getUserById = async (userId) => {
-  const response = await adminClient.get(`/users/${userId}`)
-  return response.data
+  if (isTestingAdmin()) {
+    const mockUser = MOCK_USERS.find((u) => u.id === userId)
+    if (mockUser) return { success: true, data: mockUser }
+  }
+  try {
+    const response = await adminClient.get(`/users/${userId}`)
+    return { success: true, data: mapUser(response.data?.data ?? response.data) }
+  } catch (error) {
+    console.error('Error fetching user:', error)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
 }
 
 /**
- * Crea un nuevo usuario/cliente (ADMIN)
- * @param {Object} userData - Datos del nuevo usuario
- * @param {string} userData.nombre - Nombre completo
- * @param {string} userData.username - Nombre de usuario (único)
- * @param {string} userData.numeroCuenta - Número de cuenta (generado automáticamente)
- * @param {string} userData.dpi - DPI (13 dígitos)
- * @param {string} userData.direccion - Dirección
- * @param {string} userData.telefono - Teléfono/celular (8 dígitos)
- * @param {string} userData.correo - Email
- * @param {string} userData.password - Contraseña
- * @param {string} userData.nombreTrabajo - Nombre del trabajo
- * @param {number} userData.ingresosMensuales - Ingresos (> Q100)
+ * Crea un nuevo cliente (ADMIN)
+ * Mapea campos del formulario al contrato CreateClientDto del backend
  */
 export const createUser = async (userData) => {
   try {
-    // Validar ingresos mínimos
     if (userData.ingresosMensuales <= 100) {
       throw new Error('Los ingresos mensuales deben ser mayores a Q100')
     }
 
-    // Generar número de cuenta si no viene
-    if (!userData.numeroCuenta) {
-      userData.numeroCuenta = generateAccountNumber()
+    const nameParts = String(userData.nombre || '').trim().split(/\s+/)
+    const payload = {
+      name: nameParts[0] || '',
+      surname: nameParts.slice(1).join(' ') || '-',
+      username: userData.username,
+      dpi: userData.dpi || '',
+      address: userData.direccion || '',
+      phone: userData.telefono || '',
+      email: userData.correo || '',
+      password: userData.password,
+      workName: userData.nombreTrabajo || '',
+      monthlyIncome: Number(userData.ingresosMensuales) || 0,
     }
 
-    // Asegurar rol de usuario por defecto
-    if (!userData.rol) {
-      userData.rol = 'USER_ROLE'
-    }
-
-    const response = await adminClient.post('/users', userData)
-    return {
-      success: true,
-      data: response.data.data || response.data
-    }
+    const response = await adminClient.post('/create-client', payload)
+    return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
     console.error('Error creating user:', error)
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message
-    }
+    return { success: false, error: error.response?.data?.message || error.message }
   }
 }
 
 /**
  * Actualiza un usuario existente (ADMIN)
- * No permite editar DPI ni password
+ * Mapea campos del formulario al contrato UpdateUserDto del backend
  */
 export const updateUser = async (userId, userData) => {
   try {
-    // Filtrar campos no editables
-    // eslint-disable-next-line no-unused-vars
-    const { dpi, password, numeroCuenta, ...editableData } = userData
-
-    const response = await adminClient.put(`/users/${userId}`, editableData)
-    return {
-      success: true,
-      data: response.data.data || response.data
+    const nameParts = String(userData.nombre || '').trim().split(/\s+/)
+    const payload = {
+      name: nameParts[0] || undefined,
+      surname: nameParts.slice(1).join(' ') || undefined,
+      address: userData.direccion || undefined,
+      phone: userData.telefono || undefined,
+      workName: userData.nombreTrabajo || undefined,
+      monthlyIncome: userData.ingresosMensuales ? Number(userData.ingresosMensuales) : undefined,
     }
+
+    const response = await adminClient.put(`/users/${userId}`, payload)
+    return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
     console.error('Error updating user:', error)
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message
-    }
+    return { success: false, error: error.response?.data?.message || error.message }
   }
 }
 
@@ -112,65 +125,27 @@ export const updateUser = async (userId, userData) => {
 export const deleteUser = async (userId) => {
   try {
     const response = await adminClient.delete(`/users/${userId}`)
-    return {
-      success: true,
-      data: response.data.data || response.data
-    }
+    return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
     console.error('Error deleting user:', error)
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message
-    }
+    return { success: false, error: error.response?.data?.message || error.message }
   }
 }
 
 /**
- * Cambia el rol de un usuario (ADMIN)
+ * Cambia el rol de un usuario
+ * UsersController: PUT api/v1/Users/{userId}/role — body { roleName }
  */
 export const updateUserRole = async (userId, newRole) => {
-  const response = await adminClient.put(`/users/${userId}/role`, { rol: newRole })
-  return response.data
-}
-
-/**
- * Obtiene las cuentas de un usuario con más movimientos (ADMIN)
- */
-export const getUserAccountsWithMovements = async (userId) => {
-  const response = await adminClient.get(`/users/${userId}/accounts-movements`)
-  return response.data
-}
-
-/**
- * Obtiene los últimos 5 movimientos de un usuario (ADMIN)
- */
-export const getUserLastMovements = async (userId, limit = 5) => {
-  const response = await adminClient.get(`/users/${userId}/last-movements?limit=${limit}`)
-  return response.data
-}
-
-/**
- * Realiza un depósito a una cuenta (ADMIN)
- * @param {string} accountNumber - Número de cuenta destino
- * @param {number} amount - Monto a depositar
- * @param {string} description - Descripción del depósito
- */
-export const createDeposit = async (accountNumber, amount, description = 'Depósito administrativo') => {
-  const response = await adminClient.post('/deposits', {
-    numeroCuenta: accountNumber,
-    monto: amount,
-    descripcion: description,
-  })
-  return response.data
-}
-
-/**
- * Revierte un depósito (ADMIN)
- * Solo disponible dentro de 1 minuto
- */
-export const reverseDeposit = async (depositId) => {
-  const response = await adminClient.post(`/deposits/${depositId}/reverse`)
-  return response.data
+  try {
+    const response = await publicClient.put(`Users/${encodeURIComponent(userId)}/role`, {
+      roleName: newRole,
+    })
+    return { success: true, data: response.data }
+  } catch (error) {
+    console.error('Error updating user role:', error)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
 }
 
 export default {
@@ -181,8 +156,4 @@ export default {
   deleteUser,
   updateUserRole,
   generateAccountNumber,
-  getUserAccountsWithMovements,
-  getUserLastMovements,
-  createDeposit,
-  reverseDeposit,
 }

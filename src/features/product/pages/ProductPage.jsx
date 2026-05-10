@@ -39,12 +39,17 @@ export default function ProductPage() {
   }
 
   const onSubmit = async (data) => {
+    let result = null
     if (editingProduct) {
-      await updateProduct(editingProduct._id, data)
+      result = await updateProduct(editingProduct._id, data)
     } else {
-      await createProduct(data)
+      result = await createProduct(data)
     }
-    handleCloseForm()
+
+    // Solo cerramos cuando el backend realmente confirma la operación.
+    if (result) {
+      handleCloseForm()
+    }
   }
 
   return (

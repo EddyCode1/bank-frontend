@@ -12,15 +12,17 @@ const useProductStore = create((set, get) => ({
       set({ loading: true, error: null })
       const { type, is_active } = get().filters
       const params = {}
-      
       if (type) params.type = type
       if (is_active !== '') params.is_active = is_active
 
       const response = await adminClient.get('/products', { params })
-      set({ products: response.data.products || [], loading: false })
+      set({ products: response.data?.products || [], loading: false })
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Error al cargar productos'
-      set({ error: errorMsg, loading: false })
+      if (err.response?.status === 404) {
+        set({ products: [], loading: false, error: null })
+        return
+      }
+      set({ error: err.response?.data?.message || 'Error al cargar productos', loading: false })
     }
   },
 
@@ -34,9 +36,8 @@ const useProductStore = create((set, get) => ({
       }))
       return response.data.product
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Error al crear producto'
-      set({ error: errorMsg, loading: false })
-      throw err
+      set({ error: err.response?.data?.message || 'Error al crear producto', loading: false })
+      return null
     }
   },
 
@@ -45,16 +46,13 @@ const useProductStore = create((set, get) => ({
       set({ loading: true, error: null })
       const response = await adminClient.put(`/products/${id}`, formData)
       set((state) => ({
-        products: state.products.map((p) =>
-          p._id === id ? response.data.product : p
-        ),
+        products: state.products.map((p) => (p._id === id ? response.data.product : p)),
         loading: false,
       }))
       return response.data.product
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Error al actualizar producto'
-      set({ error: errorMsg, loading: false })
-      throw err
+      set({ error: err.response?.data?.message || 'Error al actualizar producto', loading: false })
+      return null
     }
   },
 
@@ -66,10 +64,10 @@ const useProductStore = create((set, get) => ({
         products: state.products.filter((p) => p._id !== id),
         loading: false,
       }))
+      return true
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Error al eliminar producto'
-      set({ error: errorMsg, loading: false })
-      throw err
+      set({ error: err.response?.data?.message || 'Error al eliminar producto', loading: false })
+      return false
     }
   },
 

@@ -47,14 +47,14 @@ export default function DepositForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            ID de Cuenta *
+            Número de cuenta *
           </label>
           <input
             type="text"
             name="accountId"
             value={formData.accountId}
             onChange={handleChange}
-            placeholder="Ingresa el ID de la cuenta"
+            placeholder="Ej: número de cuenta en el banco"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />

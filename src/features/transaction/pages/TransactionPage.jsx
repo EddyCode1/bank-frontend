@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useTransactionStore from '../store/useTransactionStore'
 import TransactionTable from '../components/TransactionTable'
 import DepositForm from '../components/DepositForm'
@@ -20,19 +20,28 @@ export default function TransactionPage() {
     clearTransactionState
   } = useTransactionStore()
 
+  // Guard para evitar el doble fetch de React 18 StrictMode en desarrollo.
+  const fetchedRef = useRef(false)
+
   useEffect(() => {
     return () => {
       clearTransactionState()
+      fetchedRef.current = false
     }
   }, [clearTransactionState])
 
   useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+
     if (activeTab === 'my-transactions') {
       fetchMyTransactions(filters)
     } else if (activeTab === 'history') {
       fetchHistoryMe(filters)
     }
-  }, [activeTab, filters, fetchMyTransactions, fetchHistoryMe])
+    // fetchMyTransactions y fetchHistoryMe son referencias estables de Zustand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, filters])
 
   const handleTransactionClick = (transaction) => {
     setSelectedTransaction(transaction._id || transaction.id)

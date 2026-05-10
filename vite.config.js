@@ -17,8 +17,8 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      '/SistemaBancarioAdmin': {
-        target: 'http://localhost:3000',
+      '/api': {
+        target: 'http://localhost:5025',
         changeOrigin: true,
         secure: false,
       },
