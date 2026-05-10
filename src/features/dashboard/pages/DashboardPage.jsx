@@ -58,7 +58,9 @@ const institutionalProducts = [
     description:
       'Haz crecer tu dinero con opciones flexibles y rendimiento competitivo para tus metas personales.',
     photo: cardAhorro,
-    photoAlt: 'Pequeño empresario satisfecho',
+    photoAlt: 'Ilustraciones de ahorro, seguridad y educación financiera',
+    /** Iconos horizontales: mejor contain para no recortar el trío */
+    imgClassName: 'object-contain bg-white',
     path: '/loby/account',
     accent: '#5B5CF6',
   },
@@ -68,7 +70,7 @@ const institutionalProducts = [
     description:
       'Protege lo que más valoras: coberturas de vida, salud y hogar adaptadas a tu familia.',
     photo: cardSeguros,
-    photoAlt: 'Familia feliz frente a su hogar',
+    photoAlt: 'Comerciante satisfecho en frutería',
     path: '/loby/services',
     accent: '#22C55E',
   },
@@ -78,7 +80,7 @@ const institutionalProducts = [
     description:
       'Planifica tu futuro y aprende a administrar tus ingresos con cursos gratuitos en línea.',
     photo: cardEducacion,
-    photoAlt: 'Estudiante universitaria con cuaderno',
+    photoAlt: 'Profesional con cuaderno frente a edificio corporativo',
     path: '/loby/favorites',
     accent: '#A855F7',
   },
@@ -90,42 +92,42 @@ const securityTips = [
     title: 'Tu contraseña es personal',
     description: 'Nunca compartas tus credenciales. El banco jamás te solicitará claves o pines por llamada, mensaje de texto o correo electrónico.',
     image: secPassword,
-    alt: 'Icono de candado seguro',
+    alt: 'Profesional trabajando con laptop en oficina',
   },
   {
     id: 2,
     title: 'Verifica la URL siempre',
     description: 'Antes de ingresar, asegúrate de estar en el portal oficial y busca el candado de seguridad en la barra de tu navegador.',
     image: secUrl,
-    alt: 'Icono de navegador seguro',
+    alt: 'Cliente revisando el celular tras compras',
   },
   {
     id: 3,
     title: 'Sesión protegida con JWT',
     description: 'Utilizamos tokens encriptados para cada transacción. Recuerda cerrar tu sesión al finalizar, especialmente en equipos compartidos.',
     image: secJwt,
-    alt: 'Icono de token de seguridad',
+    alt: 'Ilustraciones de ahorro, protección y educación',
   },
   {
     id: 4,
     title: 'Prevención de Phishing',
     description: 'Desconfía de enlaces sospechosos o correos alarmantes que pidan verificar tu cuenta. Repórtalos a nuestro centro de atención.',
     image: secPhishing,
-    alt: 'Icono de prevención de fraude',
+    alt: 'Vendedor en puesto de frutas',
   },
   {
     id: 5,
     title: 'Actualizaciones Seguras',
     description: 'Mantén el sistema operativo y el navegador de tus dispositivos siempre actualizados para garantizar la máxima protección contra malware.',
     image: secUpdates,
-    alt: 'Icono de actualización segura',
+    alt: 'Familia frente a su hogar',
   },
   {
     id: 6,
     title: 'Monitoreo Constante',
     description: 'Revisa regularmente tu historial de movimientos. Si detectas algo que no reconoces, contáctanos de inmediato.',
     image: secMonitoring,
-    alt: 'Icono de alertas de seguridad',
+    alt: 'Profesional en entorno corporativo',
   },
 ]
 
@@ -314,7 +316,7 @@ export default function DashboardPage() {
                   <img
                     src={product.photo}
                     alt={product.photoAlt}
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${product.imgClassName ?? 'object-cover object-top'}`}
                   />
                   {/* Badge de categoría con el color de acento */}
                   <span
@@ -419,11 +421,11 @@ export default function DashboardPage() {
               key={tip.id}
               className="flex flex-col rounded-2xl border border-slate-100 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
-              <div className="mb-5 flex h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-white">
+              <div className="mb-5 aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100">
                 <img
                   src={tip.image}
                   alt={tip.alt}
-                  className="h-full w-full scale-[1.35] object-cover object-center mix-blend-multiply"
+                  className="h-full w-full object-cover object-center"
                 />
               </div>
               <h3 className="mb-2 text-lg font-bold text-slate-800">{tip.title}</h3>
