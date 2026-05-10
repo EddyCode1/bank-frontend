@@ -16,6 +16,7 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] = useState(null)
     const [actionLoading, setActionLoading] = useState(false)
     const [notification, setNotification] = useState(null)
+    const [formError, setFormError] = useState(null)
 
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type })
@@ -53,11 +54,13 @@ export default function UsersPage() {
 
     const handleCreateUser = () => {
         setSelectedUser(null)
+        setFormError(null)
         setIsFormModalOpen(true)
     }
 
     const handleEditUser = (user) => {
         setSelectedUser(user)
+        setFormError(null)
         setIsFormModalOpen(true)
     }
 
@@ -68,38 +71,34 @@ export default function UsersPage() {
 
     const handleFormSubmit = async (userData) => {
         setActionLoading(true)
+        setFormError(null)
         try {
             if (selectedUser) {
-                // Editar usuario existente
                 const result = await updateUser(selectedUser.id || selectedUser._id, userData)
                 if (result.success) {
                     showNotification('Usuario actualizado correctamente', 'success')
                     setIsFormModalOpen(false)
                     loadUsers()
                 } else {
-                    showNotification(result.error || 'Error al actualizar usuario', 'error')
+                    setFormError(result.error || 'Error al actualizar usuario')
                 }
             } else {
-                // Crear nuevo usuario
                 const result = await createUser(userData)
                 if (result.success) {
-                    // Si hubo advertencia de rol (usuario creado pero rol no asignado)
                     if (result.warning) {
                         showNotification(result.warning, 'error')
                     } else {
                         showNotification('Usuario creado correctamente', 'success')
                     }
                     setIsFormModalOpen(false)
+                    setFormError(null)
                     loadUsers()
                 } else {
-                    showNotification(result.error || 'Error al crear usuario', 'error')
+                    setFormError(result.error || 'Error al crear usuario')
                 }
             }
         } catch (error) {
-            showNotification(
-                error.message || 'Error inesperado al guardar usuario',
-                'error'
-            )
+            setFormError(error.message || 'Error inesperado al guardar usuario')
         } finally {
             setActionLoading(false)
         }
@@ -273,10 +272,11 @@ export default function UsersPage() {
             {/* Modals */}
             <UserFormModal
                 isOpen={isFormModalOpen}
-                onClose={() => setIsFormModalOpen(false)}
+                onClose={() => { setIsFormModalOpen(false); setFormError(null) }}
                 onSubmit={handleFormSubmit}
                 user={selectedUser}
                 isLoading={actionLoading}
+                submitError={formError}
             />
             <DeleteUserModal
                 isOpen={isDeleteModalOpen}

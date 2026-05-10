@@ -9,8 +9,9 @@ import { generateAccountNumber } from '../service/userService'
  * @param {Function} props.onSubmit - Función para enviar el formulario
  * @param {Object} props.user - Usuario a editar (null para crear nuevo)
  * @param {boolean} props.isLoading - Si está cargando
+ * @param {string|null} props.submitError - Error del servidor para mostrar dentro del modal
  */
-export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, isLoading = false }) {
+export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, isLoading = false, submitError = null }) {
   const isEditing = !!user
 
   const [formData, setFormData] = useState({
@@ -463,6 +464,16 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
               </select>
             </div>
           </div>
+
+          {/* Error del servidor — visible dentro del modal sin importar el z-index */}
+          {submitError && (
+            <div
+              className="mt-4 px-4 py-3 rounded-lg text-sm font-medium"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', color: '#dc2626' }}
+            >
+              <strong>Error:</strong> {submitError}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t" style={{ borderColor: 'var(--gris-medio)' }}>
