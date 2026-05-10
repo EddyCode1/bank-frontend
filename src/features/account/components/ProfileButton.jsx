@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import './ProfileButton.css'
-import defaultProfile from '/src/assets/default-profile.png'
+import defaultProfile from '../../../assets/default-profile.png'
 
 const ProfileButton = ({ imageUrl, email, onEditProfile, onLogout, onChangePhoto }) => {
   const [open, setOpen] = useState(false)

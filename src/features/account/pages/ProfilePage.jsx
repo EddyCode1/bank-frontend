@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/useAuthStore'
 import { authService } from '../../auth/service/authService'
-import defaultProfile from '/src/assets/default-profile.png'
+import defaultProfile from '../../../assets/default-profile.png'
 import { resizeImageToDataUrl } from '../../../shared/utils/resizeProfileImage'
 
 /**

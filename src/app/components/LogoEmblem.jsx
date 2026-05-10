@@ -1,4 +1,5 @@
-import logoPrincipal from '../../assets/logo-medallon-alta.png'
+// Logo principal a color (mejor contraste en navbar que el medallón sobre fondo blanco)
+import logoPrincipal from '../../assets/logo-principal-quetzal.png'
 
 /**
  * Emblema del Banco del Quetzal - Logo circular perfecto
@@ -44,9 +45,9 @@ export default function LogoEmblem({ size = 'md', className = '' }) {
             width: '100%',
             height: '100%',
             objectFit: 'contain',
-            mixBlendMode: 'multiply',
-            filter: 'brightness(1.1) contrast(1.2)',
-            transform: 'scale(1.05)',
+            mixBlendMode: 'normal',
+            filter: 'none',
+            transform: 'scale(1.02)',
           }}
           loading="eager"
         />

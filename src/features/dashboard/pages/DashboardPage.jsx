@@ -2,17 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bankingClient } from '../../../shared/api/adminClient'
 
-import bannerCreditos     from '../../../assets/banner-creditos.png'
-import bannerServicios    from '../../../assets/banner-servicios.png'
-import cardAhorro         from '../../../assets/card-ahorro.png'
-import cardSeguros        from '../../../assets/card-seguros.png'
-import cardEducacion      from '../../../assets/card-educacion.png'
-import secPassword        from '../../../assets/security-password.png'
-import secUrl             from '../../../assets/security-url.png'
-import secJwt             from '../../../assets/security-jwt.png'
-import secPhishing        from '../../../assets/security-phishing.png'
-import secUpdates         from '../../../assets/security-updates.png'
-import secMonitoring      from '../../../assets/security-monitoring.png'
+// Ilustraciones en src/assets (reemplazar por arte final cuando existan los PSD/originales)
+import bannerCreditos from '../../../assets/banner-creditos.png'
+import bannerServicios from '../../../assets/banner-servicios.png'
+import cardAhorro from '../../../assets/card-ahorro.png'
+import cardSeguros from '../../../assets/card-seguros.png'
+import cardEducacion from '../../../assets/card-educacion.png'
+import secPassword from '../../../assets/security-password.png'
+import secUrl from '../../../assets/security-url.png'
+import secJwt from '../../../assets/security-jwt.png'
+import secPhishing from '../../../assets/security-phishing.png'
+import secUpdates from '../../../assets/security-updates.png'
+import secMonitoring from '../../../assets/security-monitoring.png'
 
 const items = [
   { id: 1, label: 'Cuenta',         path: '/loby/account',       icon: '◉' },
@@ -160,9 +161,12 @@ export default function DashboardPage() {
           bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'USD', amount: 1 } }),
           bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'EUR', amount: 1 } }),
         ])
+        // API Node: { success, from, to, amount, convertedAmount } (equivale a tasa cuando amount=1)
+        const usdData = usdRes?.data
+        const eurData = eurRes?.data
         setReferenceRates({
-          usdRate: Number(usdRes?.data?.data?.rate ?? 0),
-          eurRate: Number(eurRes?.data?.data?.rate ?? 0),
+          usdRate: Number(usdData?.convertedAmount ?? usdData?.data?.rate ?? 0),
+          eurRate: Number(eurData?.convertedAmount ?? eurData?.data?.rate ?? 0),
           updatedAt: new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }),
         })
       } catch (error) {
@@ -185,7 +189,17 @@ export default function DashboardPage() {
         const res = await bankingClient.get('/currency/convert', {
           params: { from: fromCurrency, to: toCurrency, amount: Number(amount) },
         })
-        setConversionResult(res?.data?.data ?? null)
+        const d = res?.data
+        if (d?.success && d.convertedAmount != null) {
+          setConversionResult({
+            amount: d.amount,
+            from: d.from,
+            to: d.to,
+            convertedAmount: d.convertedAmount,
+          })
+        } else {
+          setConversionResult(null)
+        }
       } catch {
         setConversionResult(null)
         setExchangeError('No se pudo realizar la conversión con el backend.')
