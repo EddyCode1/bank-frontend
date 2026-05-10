@@ -1,16 +1,38 @@
 @import 'tailwindcss';
 
+/* Paleta Banco del Quetzal — confianza (azules), crecimiento (verdes), energía controlada (naranjas) */
 :root {
-  --primary: #5b5cf6;
-  --secondary: #22c55e;
-  --bg: #ffffff;
-  --surface: #f8fafc;
-  --border: #e5e7eb;
-  --text: #0f172a;
-  --muted: #64748b;
-  --ai-gradient-start: #5b5cf6;
-  --ai-gradient-end: #a855f7;
-  --danger: #ef4444;
+  --azul-profundo: #1f2a44;
+  --azul-medio: #2c4a7a;
+  --azul-vibrante: #2f7fbf;
+  --verde-jade: #1fa187;
+  --verde-medio: #2cb67d;
+  --verde-claro: #7ed7c1;
+  --naranja-principal: #f97316;
+  --naranja-rojizo: #ef4444;
+  --coral-suave: #fb7185;
+  --blanco-puro: #ffffff;
+  --gris-claro-fondo: #f5f7fa;
+  --gris-medio: #94a3b8;
+  --gris-oscuro-texto: #1e293b;
+
+  /* Tokens semánticos (layout existente) */
+  --primary: var(--azul-medio);
+  --primary-dark: var(--azul-profundo);
+  --primary-light: var(--azul-vibrante);
+  --secondary: var(--verde-jade);
+  --accent: var(--naranja-principal);
+  --bg: var(--gris-claro-fondo);
+  --surface: var(--blanco-puro);
+  --border: #e2e8f0;
+  --text: var(--gris-oscuro-texto);
+  --muted: var(--gris-medio);
+  --success: var(--verde-medio);
+  --danger: var(--naranja-rojizo);
+  --warning: var(--coral-suave);
+  /* Hero / destacados: azul institucional → azul vibrante */
+  --ai-gradient-start: var(--azul-medio);
+  --ai-gradient-end: var(--azul-vibrante);
 }
 
 /* Estilos globales personalizados */
@@ -35,16 +57,16 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--gris-claro-fondo);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--gris-medio);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--azul-medio);
 }
 
 /* Animaciones */
@@ -77,7 +99,7 @@ html {
 }
 
 .btn-primary:hover {
-  background: #4A4BE0;
+  background: var(--primary-dark);
 }
 
 .btn-secondary {
@@ -87,18 +109,18 @@ html {
 }
 
 .btn-secondary:hover {
-  background: #1BAA4D;
+  background: var(--verde-medio);
 }
 
 .input-base {
   @apply w-full px-4 py-2 rounded-lg outline-none;
   border: 1px solid var(--border);
-  background: #ffffff;
+  background: var(--blanco-puro);
 }
 
 .input-base:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(91, 92, 246, 0.14);
+  box-shadow: 0 0 0 4px rgba(44, 74, 122, 0.18);
 }
 
 .card {

@@ -11,13 +11,13 @@ import RegisterPage from '../../features/auth/pages/RegisterPage'
 // Páginas principales
 import DashboardPage from '../../features/dashboard/pages/DashboardPage'
 import AccountPage from '../../features/account/pages/AccountPage'
+import ProfilePage from '../../features/account/pages/ProfilePage'
 import FavoritePage from '../../features/favorite/pages/FavoritePage'
 import ProductPage from '../../features/product/pages/ProductPage'
 import ServicePage from '../../features/service/pages/ServicePage'
 import TransactionPage from '../../features/transaction/pages/TransactionPage'
 import { UsersPage, UserDetailPage } from '../../features/user'
-
-// Removed ProtectedRoute to allow open access during testing
+import ProtectedRoute from './ProtectedRoute'
 
 /**
  * Configuración de rutas
@@ -45,10 +45,14 @@ const router = createBrowserRouter([
       </AuthLayout>
     ),
   },
-  // Rutas principales (sin protección en entorno de pruebas)
+  // Rutas protegidas (requieren autenticación)
   {
     path: '/loby',
-    element: <MainLayout />,
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -57,6 +61,10 @@ const router = createBrowserRouter([
       {
         path: 'account',
         element: <AccountPage />,
+      },
+      {
+        path: 'profile',
+        element: <ProfilePage />,
       },
       {
         path: 'favorites',
@@ -76,11 +84,19 @@ const router = createBrowserRouter([
       },
       {
         path: 'users',
-        element: <UsersPage />,
+        element: (
+          <ProtectedRoute requiredRole="ADMIN_ROLE">
+            <UsersPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'users/:userId',
-        element: <UserDetailPage />,
+        element: (
+          <ProtectedRoute requiredRole="ADMIN_ROLE">
+            <UserDetailPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

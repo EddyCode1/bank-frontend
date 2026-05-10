@@ -46,7 +46,7 @@ authClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${response.data.token}`
           return authClient(originalRequest)
         }
-      } catch (refreshError) {
+      } catch {
         // Durante pruebas no forzamos redirección automática al login
         // para evitar que vistas públicas que hacen requests se redirijan.
         useAuthStore.getState().logout()

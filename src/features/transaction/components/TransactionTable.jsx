@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function TransactionTable({ transactions, loading, onTransactionClick }) {
   if (loading) {
     return (

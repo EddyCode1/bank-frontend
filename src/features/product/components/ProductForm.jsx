@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
+
+function buildInitialFormData(product) {
+  if (!product) {
+    return {
+      name: '',
+      description: '',
+      type: 'PRODUCTO',
+      price: '',
+    }
+  }
+  return {
+    name: product.name,
+    description: product.description || '',
+    type: product.type,
+    price: product.price,
+  }
+}
 
 export default function ProductForm({ product, onSubmit, onClose }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: 'PRODUCTO',
-    price: ''
-  })
+  const [formData, setFormData] = useState(() => buildInitialFormData(product))
 
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name,
-        description: product.description || '',
-        type: product.type,
-        price: product.price
-      })
-    }
-  }, [product])
 
   const validateForm = () => {
     const newErrors = {}
@@ -53,13 +54,13 @@ export default function ProductForm({ product, onSubmit, onClose }) {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     })
-    
+
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: ''
+        [name]: '',
       })
     }
   }
@@ -74,7 +75,7 @@ export default function ProductForm({ product, onSubmit, onClose }) {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         type: formData.type,
-        price: parseFloat(formData.price)
+        price: parseFloat(formData.price),
       })
     } finally {
       setIsSubmitting(false)
@@ -113,12 +114,14 @@ export default function ProductForm({ product, onSubmit, onClose }) {
             style={{
               borderColor: errors.name ? '#FB7185' : '#CBD5E1',
               color: '#1E293B',
-              boxShadow: !errors.name ? 'none' : '0 0 0 1px #FB7185'
+              boxShadow: !errors.name ? 'none' : '0 0 0 1px #FB7185',
             }}
           />
           <div className="flex justify-between mt-1">
             {errors.name ? (
-              <p className="text-xs font-medium" style={{ color: '#EF4444' }}>{errors.name}</p>
+              <p className="text-xs font-medium" style={{ color: '#EF4444' }}>
+                {errors.name}
+              </p>
             ) : (
               <div />
             )}
@@ -160,11 +163,13 @@ export default function ProductForm({ product, onSubmit, onClose }) {
               className="w-full px-4 py-3 border rounded-xl outline-none"
               style={{
                 borderColor: errors.price ? '#FB7185' : '#CBD5E1',
-                color: '#1E293B'
+                color: '#1E293B',
               }}
             />
             {errors.price && (
-              <p className="text-xs mt-1 font-medium" style={{ color: '#EF4444' }}>{errors.price}</p>
+              <p className="text-xs mt-1 font-medium" style={{ color: '#EF4444' }}>
+                {errors.price}
+              </p>
             )}
           </div>
         </div>
@@ -183,7 +188,7 @@ export default function ProductForm({ product, onSubmit, onClose }) {
             className="w-full px-4 py-3 border rounded-xl outline-none transition-all resize-none"
             style={{
               borderColor: errors.description ? '#FB7185' : '#CBD5E1',
-              color: '#1E293B'
+              color: '#1E293B',
             }}
           />
           <p className="text-xs mt-1 text-right" style={{ color: '#94A3B8' }}>
@@ -208,7 +213,7 @@ export default function ProductForm({ product, onSubmit, onClose }) {
             style={{
               backgroundColor: '#F97316',
               opacity: isSubmitting ? 0.7 : 1,
-              cursor: isSubmitting ? 'not-allowed' : 'pointer'
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
             }}
           >
             {isSubmitting ? 'Procesando...' : product ? 'Guardar Cambios' : 'Confirmar Registro'}

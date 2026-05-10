@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import useTransactionStore from '../store/useTransactionStore'
 
 export default function DepositForm() {

@@ -1,23 +1,44 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUsers } from '../service/userService'
+import { getUsers, createUser, updateUser, deleteUser } from '../services/userService'
+import UserFormModal from '../components/UserFormModal'
+import DeleteUserModal from '../components/DeleteUserModal'
 
 export default function UsersPage() {
     const navigate = useNavigate()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    
+    // Modal states
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState(null)
+    const [actionLoading, setActionLoading] = useState(false)
+    const [notification, setNotification] = useState(null)
 
-    useEffect(() => {
-        const loadUsers = async () => {
-            setLoading(true)
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type })
+        setTimeout(() => setNotification(null), 4000)
+    }
+
+    const loadUsers = async () => {
+        setLoading(true)
+        try {
             const result = await getUsers()
             if (result.success) {
                 setUsers(result.data)
             }
+        } catch {
+            showNotification('Error al cargar usuarios', 'error')
+        } finally {
             setLoading(false)
         }
-        loadUsers()
+    }
+
+    useEffect(() => {
+        queueMicrotask(() => loadUsers())
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const filteredUsers = users.filter((user) =>
@@ -30,11 +51,101 @@ export default function UsersPage() {
         navigate(`/loby/users/${userId}`)
     }
 
+    const handleCreateUser = () => {
+        setSelectedUser(null)
+        setIsFormModalOpen(true)
+    }
+
+    const handleEditUser = (user) => {
+        setSelectedUser(user)
+        setIsFormModalOpen(true)
+    }
+
+    const handleDeleteClick = (user) => {
+        setSelectedUser(user)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleFormSubmit = async (userData) => {
+        setActionLoading(true)
+        try {
+            if (selectedUser) {
+                // Editar usuario existente
+                const result = await updateUser(selectedUser.id || selectedUser._id, userData)
+                if (result.success) {
+                    showNotification('Usuario actualizado correctamente', 'success')
+                    setIsFormModalOpen(false)
+                    loadUsers()
+                }
+            } else {
+                // Crear nuevo usuario
+                const result = await createUser(userData)
+                if (result.success) {
+                    showNotification('Usuario creado correctamente', 'success')
+                    setIsFormModalOpen(false)
+                    loadUsers()
+                }
+            }
+        } catch (error) {
+            showNotification(
+                error.response?.data?.message || error.message || 'Error al guardar usuario',
+                'error'
+            )
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
+    const handleDeleteConfirm = async (userId) => {
+        setActionLoading(true)
+        try {
+            const result = await deleteUser(userId)
+            if (result.success) {
+                showNotification('Usuario eliminado correctamente', 'success')
+                setIsDeleteModalOpen(false)
+                loadUsers()
+            }
+        } catch (error) {
+            showNotification(
+                error.response?.data?.message || error.message || 'Error al eliminar usuario',
+                'error'
+            )
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     return (
         <div className="p-6" style={{ background: 'var(--bg)' }}>
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>Usuarios</h1>
-                <p className="mt-1" style={{ color: 'var(--muted)' }}>Gestión y visualización de usuarios del sistema</p>
+            {/* Notification */}
+            {notification && (
+                <div
+                    className="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg animate-fade-in"
+                    style={{
+                        background: notification.type === 'error' ? 'var(--danger)' : 'var(--success)',
+                        color: 'white',
+                    }}
+                >
+                    {notification.message}
+                </div>
+            )}
+
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>Usuarios</h1>
+                    <p className="mt-1" style={{ color: 'var(--muted)' }}>Gestión y visualización de usuarios del sistema</p>
+                </div>
+                <button
+                    onClick={handleCreateUser}
+                    className="px-4 py-2 rounded-lg font-medium transition hover:opacity-90 flex items-center gap-2"
+                    style={{
+                        background: 'var(--primary)',
+                        color: 'white',
+                    }}
+                >
+                    <span className="text-xl">+</span>
+                    Nuevo Usuario
+                </button>
             </div>
 
             {/* Search Bar */}
@@ -73,7 +184,7 @@ export default function UsersPage() {
                                 <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Email</th>
                                 <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Teléfono</th>
                                 <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Rol</th>
-                                <th className="px-6 py-3 text-center text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Acciones</th>
+                                <th className="px-6 py-3 text-right text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody style={{ borderTop: '1px solid var(--gris-medio)' }}>
@@ -94,18 +205,45 @@ export default function UsersPage() {
                                             {user.rol || 'USER'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <button
-                                            onClick={() => handleViewDetail(user.id || user._id)}
-                                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
-                                            style={{
-                                                border: '1px solid var(--primary)',
-                                                color: 'var(--primary)',
-                                                background: 'transparent'
-                                            }}
-                                        >
-                                            Ver detalle
-                                        </button>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => handleViewDetail(user.id || user._id)}
+                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
+                                                style={{
+                                                    border: '1px solid var(--azul-vibrante)',
+                                                    color: 'var(--azul-vibrante)',
+                                                    background: 'transparent'
+                                                }}
+                                                title="Ver detalle"
+                                            >
+                                                Ver
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditUser(user)}
+                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
+                                                style={{
+                                                    border: '1px solid var(--naranja)',
+                                                    color: 'var(--naranja)',
+                                                    background: 'transparent'
+                                                }}
+                                                title="Editar usuario"
+                                            >
+                                                Editar
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteClick(user)}
+                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
+                                                style={{
+                                                    border: '1px solid var(--danger)',
+                                                    color: 'var(--danger)',
+                                                    background: 'transparent'
+                                                }}
+                                                title="Eliminar usuario"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -120,6 +258,22 @@ export default function UsersPage() {
                     Total de usuarios: <span className="font-semibold" style={{ color: 'var(--text)' }}>{users.length}</span>
                 </p>
             </div>
+
+            {/* Modals */}
+            <UserFormModal
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                onSubmit={handleFormSubmit}
+                user={selectedUser}
+                isLoading={actionLoading}
+            />
+            <DeleteUserModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                user={selectedUser}
+                isLoading={actionLoading}
+            />
         </div>
     )
 }

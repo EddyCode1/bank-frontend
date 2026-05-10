@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import ProductList from '../components/ProductList'
 import ProductForm from '../components/ProductForm'
 import useAuthStore from '../../auth/store/useAuthStore'
@@ -108,6 +108,7 @@ export default function ProductPage() {
           <div className="fixed inset-0 bg-[#1F2A44]/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
               <ProductForm
+                key={String(editingProduct?._id ?? editingProduct?.id ?? 'new')}
                 product={editingProduct}
                 onSubmit={onSubmit}
                 onClose={handleCloseForm}

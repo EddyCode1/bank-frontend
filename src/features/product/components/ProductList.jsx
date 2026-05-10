@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
   
   // Badge de categoría (Producto/Servicio)

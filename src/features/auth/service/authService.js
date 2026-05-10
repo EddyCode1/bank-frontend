@@ -53,7 +53,7 @@ export const authService = {
     try {
       const response = await authClient.get('/me', { headers: { Authorization: `Bearer ${token}` } })
       return { success: true, user: response.data }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Token inválido' }
     }
   },

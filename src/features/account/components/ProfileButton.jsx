@@ -1,8 +1,6 @@
 
-
-import React, { useState, useRef, useEffect } from 'react';
-import { FaUserCircle } from 'react-icons/fa';
-import './ProfileButton.css';
+import { useState, useRef, useEffect } from 'react'
+import './ProfileButton.css'
 import defaultProfile from '/src/assets/default-profile.png';
 
 const ProfileButton = ({ imageUrl, email, onEditProfile, onLogout, onChangePhoto }) => {

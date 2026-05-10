@@ -120,7 +120,7 @@ const RegisterPage = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-2 w-full rounded-xl bg-[var(--primary)] py-2.5 font-semibold text-white transition hover:bg-[#4A4BE0] disabled:cursor-not-allowed disabled:bg-[var(--muted)]"
+          className="mt-2 w-full rounded-xl bg-[var(--primary)] py-2.5 font-semibold text-white transition hover:bg-[var(--primary-dark)] disabled:cursor-not-allowed disabled:bg-[var(--muted)]"
         >
           {isLoading ? 'Cargando...' : 'Crear cuenta'}
         </button>

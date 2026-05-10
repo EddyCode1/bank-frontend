@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import useTransactionStore from '../store/useTransactionStore'
 
 export default function TransactionDetail({ transactionId, onClose }) {

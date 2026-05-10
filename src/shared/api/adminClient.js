@@ -122,13 +122,45 @@ adminClient.interceptors.response.use(
   }
 )
 
-// Cliente público sin autenticación (p. ej. registro o endpoints abiertos)
+// Cliente para rutas que el backend expone en la misma base que el API admin (p. ej. transacciones)
 export const publicClient = axios.create({
-  baseURL: import.meta.env.VITE_ADMIN_URL,
+  baseURL:
+    import.meta.env.VITE_ADMIN_URL ||
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_PRODUCT_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
+// Interceptor para agregar token a publicClient también
+publicClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().getToken()
+    if (token) {
+      config.headers['x-token'] = token
+    }
+
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Interceptor de respuesta para manejar errores 401
+publicClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default adminClient
 export { MOCK_USERS }

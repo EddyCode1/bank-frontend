@@ -1,17 +1,27 @@
+import LogoEmblem from './LogoEmblem'
+
 /**
- * Logo institucional textual para vistas públicas
+ * Marca institucional en login/registro: emblema + nombre y eslogan.
  */
 const BrandLogo = ({ compact = false }) => {
   return (
-    <div className={`flex items-center ${compact ? 'gap-2' : 'flex-col gap-3 text-center'}`}>
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--ai-gradient-start)] to-[var(--ai-gradient-end)] text-xl font-bold text-white shadow-lg shadow-[rgba(91,92,246,0.25)]">
-        VB
-      </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--secondary)]">
-          Banca Digital
+    <div
+      className={`flex flex-col items-center ${compact ? 'gap-4' : 'gap-6'} text-center`}
+    >
+      <LogoEmblem size={compact ? 'lg' : 'xl'} />
+
+      <div className="space-y-2">
+        <h1
+          className={`font-serif font-bold tracking-[0.08em] text-[var(--azul-profundo)] ${compact ? 'text-xl' : 'text-2xl sm:text-3xl'}`}
+          style={{ fontVariant: 'small-caps' }}
+        >
+          Banco del Quetzal
+        </h1>
+        <p
+          className={`mx-auto max-w-md font-serif italic leading-relaxed text-[var(--muted)] ${compact ? 'text-xs' : 'text-sm sm:text-base'}`}
+        >
+          Tu bienestar es nuestro trabajo
         </p>
-        <h1 className="text-xl font-bold text-[var(--text)]">Visual Banco</h1>
       </div>
     </div>
   )

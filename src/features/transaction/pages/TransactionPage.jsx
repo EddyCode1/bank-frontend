@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useTransactionStore from '../store/useTransactionStore'
-import useAuthStore from '../../auth/store/useAuthStore'
 import TransactionTable from '../components/TransactionTable'
 import DepositForm from '../components/DepositForm'
 import TransactionDetail from '../components/TransactionDetail'
@@ -20,8 +19,6 @@ export default function TransactionPage() {
     fetchHistoryMe,
     clearTransactionState
   } = useTransactionStore()
-
-  const { user } = useAuthStore()
 
   useEffect(() => {
     return () => {
