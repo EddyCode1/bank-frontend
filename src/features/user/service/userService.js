@@ -1,7 +1,6 @@
-import adminClient from '../../../shared/api/adminClient'
-import { MOCK_USERS } from '../../../shared/api/adminClient'
-import useAuthStore from '../../../features/auth/store/useAuthStore'
-import toast from 'react-hot-toast'
+import adminClient, { publicClient } from '../../../shared/api/adminClient'
+import { MOCK_USERS, TESTING_ADMIN_CREDENTIALS } from '../../../shared/mocks'
+import useAuthStore from '../../auth/store/useAuthStore'
 
 /**
  * Adapta la respuesta del backend (name, surname, phone, role) al modelo
@@ -21,11 +20,19 @@ function mapUser(raw) {
 /** Detecta si la sesión activa corresponde a la cuenta de testing */
 function isTestingAdmin() {
   const user = useAuthStore.getState().getUser()
-  return user?.username === 'ADMINB' || user?.email === 'admin@bank.com'
+  return (
+    user?.username === TESTING_ADMIN_CREDENTIALS.username ||
+    user?.email === TESTING_ADMIN_CREDENTIALS.email
+  )
 }
 
+export const generateAccountNumber = () =>
+  Math.floor(1000000000 + Math.random() * 9000000000).toString()
+
 /**
- * Obtener lista de usuarios
+ * Obtiene todos los usuarios (ADMIN).
+ * Cuando la sesión es la cuenta de testing (ADMINB) se devuelven los
+ * usuarios de ejemplo para poder probar el módulo sin datos reales.
  */
 export const getUsers = async () => {
   if (isTestingAdmin()) {
@@ -38,13 +45,13 @@ export const getUsers = async () => {
     return { success: true, data: items.map(mapUser) }
   } catch (error) {
     console.error('Error fetching users:', error)
-    toast.error(error.response?.data?.message || 'Error al obtener usuarios')
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, data: [], error: error.response?.data?.message || error.message }
   }
 }
 
 /**
- * Obtener detalle de un usuario por ID
+ * Obtiene un usuario por ID (ADMIN).
+ * Con la cuenta de testing devuelve el usuario mock correspondiente.
  */
 export const getUserById = async (userId) => {
   if (isTestingAdmin()) {
@@ -55,36 +62,102 @@ export const getUserById = async (userId) => {
     const response = await adminClient.get(`/users/${userId}`)
     return { success: true, data: mapUser(response.data?.data ?? response.data) }
   } catch (error) {
-    console.error('Error fetching user detail:', error)
-    toast.error(error.response?.data?.message || 'Error al obtener detalle del usuario')
+    console.error('Error fetching user:', error)
     return { success: false, error: error.response?.data?.message || error.message }
   }
 }
 
 /**
- * Obtener lista de cuentas
+ * Crea un nuevo cliente (ADMIN)
+ * Mapea campos del formulario al contrato CreateClientDto del backend
  */
-export const getAccounts = async () => {
+export const createUser = async (userData) => {
   try {
-    const response = await adminClient.get('/accounts')
-    return { success: true, data: response.data?.data ?? response.data ?? [] }
+    if (userData.ingresosMensuales <= 100) {
+      throw new Error('Los ingresos mensuales deben ser mayores a Q100')
+    }
+
+    const nameParts = String(userData.nombre || '').trim().split(/\s+/)
+    const payload = {
+      name: nameParts[0] || '',
+      surname: nameParts.slice(1).join(' ') || '-',
+      username: userData.username,
+      dpi: userData.dpi || '',
+      address: userData.direccion || '',
+      phone: userData.telefono || '',
+      email: userData.correo || '',
+      password: userData.password,
+      workName: userData.nombreTrabajo || '',
+      monthlyIncome: Number(userData.ingresosMensuales) || 0,
+    }
+
+    const response = await adminClient.post('/create-client', payload)
+    return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
-    console.error('Error fetching accounts:', error)
-    toast.error(error.response?.data?.message || 'Error al obtener cuentas')
+    console.error('Error creating user:', error)
     return { success: false, error: error.response?.data?.message || error.message }
   }
 }
 
 /**
- * Obtener detalle de una cuenta por ID
+ * Actualiza un usuario existente (ADMIN)
+ * Mapea campos del formulario al contrato UpdateUserDto del backend
  */
-export const getAccountById = async (accountId) => {
+export const updateUser = async (userId, userData) => {
   try {
-    const response = await adminClient.get(`/accounts/${accountId}`)
-    return { success: true, data: response.data?.data ?? response.data ?? {} }
+    const nameParts = String(userData.nombre || '').trim().split(/\s+/)
+    const payload = {
+      name: nameParts[0] || undefined,
+      surname: nameParts.slice(1).join(' ') || undefined,
+      address: userData.direccion || undefined,
+      phone: userData.telefono || undefined,
+      workName: userData.nombreTrabajo || undefined,
+      monthlyIncome: userData.ingresosMensuales ? Number(userData.ingresosMensuales) : undefined,
+    }
+
+    const response = await adminClient.put(`/users/${userId}`, payload)
+    return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
-    console.error('Error fetching account detail:', error)
-    toast.error(error.response?.data?.message || 'Error al obtener detalle de la cuenta')
+    console.error('Error updating user:', error)
     return { success: false, error: error.response?.data?.message || error.message }
   }
+}
+
+/**
+ * Elimina un usuario (ADMIN)
+ */
+export const deleteUser = async (userId) => {
+  try {
+    const response = await adminClient.delete(`/users/${userId}`)
+    return { success: true, data: response.data?.data ?? response.data }
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
+}
+
+/**
+ * Cambia el rol de un usuario
+ * UsersController: PUT api/v1/Users/{userId}/role — body { roleName }
+ */
+export const updateUserRole = async (userId, newRole) => {
+  try {
+    const response = await publicClient.put(`Users/${encodeURIComponent(userId)}/role`, {
+      roleName: newRole,
+    })
+    return { success: true, data: response.data }
+  } catch (error) {
+    console.error('Error updating user role:', error)
+    return { success: false, error: error.response?.data?.message || error.message }
+  }
+}
+
+export default {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateUserRole,
+  generateAccountNumber,
 }

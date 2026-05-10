@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import adminClient from '../../../shared/api/adminClient'
+import { bankingClient } from '../../../shared/api/adminClient'
 
 const useProductStore = create((set, get) => ({
   products: [],
@@ -15,7 +15,7 @@ const useProductStore = create((set, get) => ({
       if (type) params.type = type
       if (is_active !== '') params.is_active = is_active
 
-      const response = await adminClient.get('/products', { params })
+      const response = await bankingClient.get('/products', { params })
       set({ products: response.data?.products || [], loading: false })
     } catch (err) {
       if (err.response?.status === 404) {
@@ -29,7 +29,7 @@ const useProductStore = create((set, get) => ({
   createProduct: async (formData) => {
     try {
       set({ loading: true, error: null })
-      const response = await adminClient.post('/products', formData)
+      const response = await bankingClient.post('/products', formData)
       set((state) => ({
         products: [response.data.product, ...state.products],
         loading: false,
@@ -44,7 +44,7 @@ const useProductStore = create((set, get) => ({
   updateProduct: async (id, formData) => {
     try {
       set({ loading: true, error: null })
-      const response = await adminClient.put(`/products/${id}`, formData)
+      const response = await bankingClient.put(`/products/${id}`, formData)
       set((state) => ({
         products: state.products.map((p) => (p._id === id ? response.data.product : p)),
         loading: false,
@@ -59,7 +59,7 @@ const useProductStore = create((set, get) => ({
   deleteProduct: async (id) => {
     try {
       set({ loading: true, error: null })
-      await adminClient.delete(`/products/${id}`)
+      await bankingClient.delete(`/products/${id}`)
       set((state) => ({
         products: state.products.filter((p) => p._id !== id),
         loading: false,

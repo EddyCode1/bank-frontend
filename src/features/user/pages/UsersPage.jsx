@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUsers, createUser, updateUser, deleteUser } from '../services/userService'
+import { getUsers, createUser, updateUser, deleteUser } from '../service/userService'
 import UserFormModal from '../components/UserFormModal'
 import DeleteUserModal from '../components/DeleteUserModal'
 

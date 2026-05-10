@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { publicClient } from '../../../shared/api/adminClient'
+import { bankingClient } from '../../../shared/api/adminClient'
 
 import bannerCreditos     from '../../../assets/banner-creditos.png'
 import bannerServicios    from '../../../assets/banner-servicios.png'
@@ -157,8 +157,8 @@ export default function DashboardPage() {
       setReferenceError('')
       try {
         const [usdRes, eurRes] = await Promise.all([
-          publicClient.get('/currency/convert', { params: { from: 'GTQ', to: 'USD', amount: 1 } }),
-          publicClient.get('/currency/convert', { params: { from: 'GTQ', to: 'EUR', amount: 1 } }),
+          bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'USD', amount: 1 } }),
+          bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'EUR', amount: 1 } }),
         ])
         setReferenceRates({
           usdRate: Number(usdRes?.data?.data?.rate ?? 0),
@@ -182,7 +182,7 @@ export default function DashboardPage() {
       setLoadingConversion(true)
       setExchangeError('')
       try {
-        const res = await publicClient.get('/currency/convert', {
+        const res = await bankingClient.get('/currency/convert', {
           params: { from: fromCurrency, to: toCurrency, amount: Number(amount) },
         })
         setConversionResult(res?.data?.data ?? null)

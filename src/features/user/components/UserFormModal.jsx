@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { generateAccountNumber } from '../services/userService'
+import { generateAccountNumber } from '../service/userService'
 
 /**
  * Modal para crear o editar usuarios

@@ -4,23 +4,19 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout'
 import AuthLayout from '../layouts/AuthLayout'
 
-// Páginas públicas
-import LoginPage from '../../features/auth/pages/LoginPage'
-import RegisterPage from '../../features/auth/pages/RegisterPage'
-
-// Páginas principales
-import DashboardPage from '../../features/dashboard/pages/DashboardPage'
-import AccountPage from '../../features/account/pages/AccountPage'
-import ProfilePage from '../../features/account/pages/ProfilePage'
-import FavoritePage from '../../features/favorite/pages/FavoritePage'
-import ProductPage from '../../features/product/pages/ProductPage'
-import ServicePage from '../../features/service/pages/ServicePage'
-import TransactionPage from '../../features/transaction/pages/TransactionPage'
+// Feature exports (usando barrel exports)
+import { LoginPage, RegisterPage } from '../../features/auth'
+import { DashboardPage } from '../../features/dashboard'
+import { AccountPage, ProfilePage } from '../../features/account'
+import { FavoritePage } from '../../features/favorite'
+import { ProductPage } from '../../features/product'
+import { ServicePage } from '../../features/service'
+import { TransactionPage } from '../../features/transaction'
 import { UsersPage, UserDetailPage } from '../../features/user'
 import ProtectedRoute from './ProtectedRoute'
 
 /**
- * Configuración de rutas
+ * Configuración de rutas de la aplicación
  */
 const router = createBrowserRouter([
   // Ruta raíz redirige al dashboard
@@ -28,7 +24,7 @@ const router = createBrowserRouter([
     path: '/',
     element: <Navigate to="/loby" replace />,
   },
-  // Rutas públicas
+  // Rutas públicas (autenticación)
   {
     path: '/login',
     element: (
@@ -71,7 +67,7 @@ const router = createBrowserRouter([
         element: <FavoritePage />,
       },
       {
-        path: 'products', // Ahora es hijo de /loby, la ruta será /loby/products
+        path: 'products',
         element: <ProductPage />,
       },
       {
@@ -100,6 +96,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Cualquier otra ruta redirige al inicio
   {
     path: '*',
     element: <Navigate to="/" replace />,
