@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 
 /**
- * Sidebar principal con navegación bancaria.
+ * Sidebar principal con navegación bancaria y bloque de administración si aplica.
  */
 const menuItems = [
   { to: '/loby', label: 'Panel general', icon: '▦' },
@@ -16,6 +16,7 @@ const menuItems = [
 const Sidebar = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuthStore()
   const navigate = useNavigate()
+  const isAdmin = user?.rol === 'ADMIN_ROLE' || user?.rol === 'admin'
 
   const handleLogout = () => {
     logout()
@@ -65,10 +66,33 @@ const Sidebar = ({ isOpen = true, onClose }) => {
               <span>{item.label}</span>
             </NavLink>
           ))}
+
+          {isAdmin ? (
+            <div className="mt-4 border-t border-[var(--border)] pt-4">
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Administración
+              </p>
+              <NavLink
+                to="/loby/users"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                    isActive
+                      ? 'bg-[var(--primary)] text-white shadow-sm'
+                      : 'text-[var(--primary)] hover:bg-[var(--surface)]'
+                  }`
+                }
+              >
+                <span className="inline-flex w-5 justify-center text-xs">◎</span>
+                <span>Usuarios</span>
+              </NavLink>
+            </div>
+          ) : null}
         </nav>
 
         <div className="mt-8 border-t border-[var(--border)] pt-5">
           <button
+            type="button"
             onClick={handleLogout}
             className="w-full rounded-xl bg-[var(--danger)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[#DC2626]"
           >

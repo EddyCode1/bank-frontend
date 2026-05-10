@@ -1,16 +1,16 @@
 @import 'tailwindcss';
 
 :root {
-  --primary: #5B5CF6;
-  --secondary: #22C55E;
-  --bg: #FFFFFF;
-  --surface: #F8FAFC;
-  --border: #E5E7EB;
-  --text: #0F172A;
-  --muted: #64748B;
-  --ai-gradient-start: #5B5CF6;
-  --ai-gradient-end: #A855F7;
-  --danger: #EF4444;
+  --primary: #5b5cf6;
+  --secondary: #22c55e;
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --border: #e5e7eb;
+  --text: #0f172a;
+  --muted: #64748b;
+  --ai-gradient-start: #5b5cf6;
+  --ai-gradient-end: #a855f7;
+  --danger: #ef4444;
 }
 
 /* Estilos globales personalizados */
