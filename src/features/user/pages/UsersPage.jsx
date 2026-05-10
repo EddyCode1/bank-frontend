@@ -76,19 +76,28 @@ export default function UsersPage() {
                     showNotification('Usuario actualizado correctamente', 'success')
                     setIsFormModalOpen(false)
                     loadUsers()
+                } else {
+                    showNotification(result.error || 'Error al actualizar usuario', 'error')
                 }
             } else {
                 // Crear nuevo usuario
                 const result = await createUser(userData)
                 if (result.success) {
-                    showNotification('Usuario creado correctamente', 'success')
+                    // Si hubo advertencia de rol (usuario creado pero rol no asignado)
+                    if (result.warning) {
+                        showNotification(result.warning, 'error')
+                    } else {
+                        showNotification('Usuario creado correctamente', 'success')
+                    }
                     setIsFormModalOpen(false)
                     loadUsers()
+                } else {
+                    showNotification(result.error || 'Error al crear usuario', 'error')
                 }
             }
         } catch (error) {
             showNotification(
-                error.response?.data?.message || error.message || 'Error al guardar usuario',
+                error.message || 'Error inesperado al guardar usuario',
                 'error'
             )
         } finally {
@@ -104,10 +113,12 @@ export default function UsersPage() {
                 showNotification('Usuario eliminado correctamente', 'success')
                 setIsDeleteModalOpen(false)
                 loadUsers()
+            } else {
+                showNotification(result.error || 'Error al eliminar usuario', 'error')
             }
         } catch (error) {
             showNotification(
-                error.response?.data?.message || error.message || 'Error al eliminar usuario',
+                error.message || 'Error inesperado al eliminar usuario',
                 'error'
             )
         } finally {

@@ -45,7 +45,7 @@ export const getUsers = async () => {
     return { success: true, data: items.map(mapUser) }
   } catch (error) {
     console.error('Error fetching users:', error)
-    return { success: false, data: [], error: error.response?.data?.message || error.message }
+    return { success: false, data: [], error: parseBackendError(error) }
   }
 }
 
@@ -63,13 +63,32 @@ export const getUserById = async (userId) => {
     return { success: true, data: mapUser(response.data?.data ?? response.data) }
   } catch (error) {
     console.error('Error fetching user:', error)
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, error: parseBackendError(error) }
   }
 }
 
 /**
- * Crea un nuevo cliente (ADMIN)
- * Mapea campos del formulario al contrato CreateClientDto del backend
+ * Extrae un mensaje legible de errores de FluentValidation o errores genéricos del backend.
+ * FluentValidation devuelve { errors: { Campo: ["msg1", "msg2"] } }
+ */
+function parseBackendError(error) {
+  const data = error.response?.data
+  if (!data) return error.message
+
+  // Formato FluentValidation: { errors: { Campo: ["mensaje"] } }
+  if (data.errors && typeof data.errors === 'object') {
+    const msgs = Object.values(data.errors).flat()
+    if (msgs.length > 0) return msgs.join(' | ')
+  }
+
+  // Formato simple: { message: "..." } o { title: "..." }
+  return data.message || data.title || error.message
+}
+
+/**
+ * Crea un nuevo cliente (ADMIN).
+ * Si el rol seleccionado es ADMIN_ROLE, asigna el rol después de crear el usuario.
+ * Mapea campos del formulario al contrato CreateClientDto del backend.
  */
 export const createUser = async (userData) => {
   try {
@@ -92,10 +111,26 @@ export const createUser = async (userData) => {
     }
 
     const response = await adminClient.post('/create-client', payload)
-    return { success: true, data: response.data?.data ?? response.data }
+    const createdUser = response.data?.data ?? response.data
+
+    // Si el admin seleccionó rol ADMIN_ROLE, asignar el rol después de crear
+    if (userData.rol === 'ADMIN_ROLE' && createdUser?.id) {
+      const roleResult = await updateUserRole(createdUser.id, 'ADMIN_ROLE')
+      if (!roleResult.success) {
+        // Usuario creado pero sin el rol admin; se avisa pero no se falla
+        console.warn('Usuario creado, pero no se pudo asignar rol admin:', roleResult.error)
+        return {
+          success: true,
+          data: createdUser,
+          warning: 'Usuario creado correctamente, pero no se pudo asignar el rol de administrador.',
+        }
+      }
+    }
+
+    return { success: true, data: createdUser }
   } catch (error) {
     console.error('Error creating user:', error)
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, error: parseBackendError(error) }
   }
 }
 
@@ -119,7 +154,7 @@ export const updateUser = async (userId, userData) => {
     return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
     console.error('Error updating user:', error)
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, error: parseBackendError(error) }
   }
 }
 
@@ -132,23 +167,24 @@ export const deleteUser = async (userId) => {
     return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
     console.error('Error deleting user:', error)
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, error: parseBackendError(error) }
   }
 }
 
 /**
- * Cambia el rol de un usuario
+ * Cambia el rol de un usuario.
  * UsersController: PUT api/v1/Users/{userId}/role — body { roleName }
+ * NOTA: se usa /Users/... con barra inicial para evitar concatenación incorrecta con baseURL.
  */
 export const updateUserRole = async (userId, newRole) => {
   try {
-    const response = await publicClient.put(`Users/${encodeURIComponent(userId)}/role`, {
+    const response = await publicClient.put(`/Users/${encodeURIComponent(userId)}/role`, {
       roleName: newRole,
     })
     return { success: true, data: response.data }
   } catch (error) {
     console.error('Error updating user role:', error)
-    return { success: false, error: error.response?.data?.message || error.message }
+    return { success: false, error: parseBackendError(error) }
   }
 }
 
