@@ -92,42 +92,42 @@ const securityTips = [
     title: 'Tu contraseña es personal',
     description: 'Nunca compartas tus credenciales. El banco jamás te solicitará claves o pines por llamada, mensaje de texto o correo electrónico.',
     image: secPassword,
-    alt: 'Profesional trabajando con laptop en oficina',
+    alt: 'Ícono de candado de seguridad',
   },
   {
     id: 2,
     title: 'Verifica la URL siempre',
     description: 'Antes de ingresar, asegúrate de estar en el portal oficial y busca el candado de seguridad en la barra de tu navegador.',
     image: secUrl,
-    alt: 'Cliente revisando el celular tras compras',
+    alt: 'Ventana de navegador con escudo verificado',
   },
   {
     id: 3,
     title: 'Sesión protegida con JWT',
     description: 'Utilizamos tokens encriptados para cada transacción. Recuerda cerrar tu sesión al finalizar, especialmente en equipos compartidos.',
     image: secJwt,
-    alt: 'Ilustraciones de ahorro, protección y educación',
+    alt: 'Llave digital de autenticación',
   },
   {
     id: 4,
     title: 'Prevención de Phishing',
     description: 'Desconfía de enlaces sospechosos o correos alarmantes que pidan verificar tu cuenta. Repórtalos a nuestro centro de atención.',
     image: secPhishing,
-    alt: 'Vendedor en puesto de frutas',
+    alt: 'Advertencia de phishing en dispositivo móvil',
   },
   {
     id: 5,
     title: 'Actualizaciones Seguras',
     description: 'Mantén el sistema operativo y el navegador de tus dispositivos siempre actualizados para garantizar la máxima protección contra malware.',
     image: secUpdates,
-    alt: 'Familia frente a su hogar',
+    alt: 'Equipo y configuración segura',
   },
   {
     id: 6,
     title: 'Monitoreo Constante',
     description: 'Revisa regularmente tu historial de movimientos. Si detectas algo que no reconoces, contáctanos de inmediato.',
     image: secMonitoring,
-    alt: 'Profesional en entorno corporativo',
+    alt: 'Notificación y alertas de cuenta',
   },
 ]
 
@@ -421,11 +421,12 @@ export default function DashboardPage() {
               key={tip.id}
               className="flex flex-col rounded-2xl border border-slate-100 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
-              <div className="mb-5 aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100">
+              {/* Ilustraciones 3D: fondo claro y contain para no recortar el ícono */}
+              <div className="mb-5 flex h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-slate-50 to-white px-4 py-3 ring-1 ring-slate-100">
                 <img
                   src={tip.image}
                   alt={tip.alt}
-                  className="h-full w-full object-cover object-center"
+                  className="max-h-full max-w-[min(100%,220px)] object-contain object-center"
                 />
               </div>
               <h3 className="mb-2 text-lg font-bold text-slate-800">{tip.title}</h3>
