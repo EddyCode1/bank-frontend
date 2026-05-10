@@ -92,8 +92,8 @@ function parseBackendError(error) {
  */
 export const createUser = async (userData) => {
   try {
-    if (userData.ingresosMensuales <= 100) {
-      throw new Error('Los ingresos mensuales deben ser mayores a Q100')
+    if (userData.ingresosMensuales < 100) {
+      throw new Error('Los ingresos mensuales deben ser al menos Q100')
     }
 
     const nameParts = String(userData.nombre || '').trim().split(/\s+/)

@@ -98,70 +98,91 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
   const validateForm = () => {
     const newErrors = {}
 
-    // Nombre
-    if (!formData.nombre.trim()) {
+    // Nombre completo → se divide en Name (primera palabra) y Surname (resto)
+    // Backend: Name NotEmpty MaxLength(100), Surname NotEmpty MaxLength(100)
+    const nameTrimmed = formData.nombre.trim()
+    if (!nameTrimmed) {
       newErrors.nombre = 'Nombre requerido'
-    } else if (formData.nombre.trim().length < 3) {
-      newErrors.nombre = 'Nombre debe tener al menos 3 caracteres'
-    }
-
-    // Usuario
-    if (!formData.username.trim()) {
-      newErrors.username = 'Usuario requerido'
-    } else if (formData.username.trim().length < 4) {
-      newErrors.username = 'Usuario debe tener al menos 4 caracteres'
-    }
-
-    // Password
-    if (!isEditing && !formData.password) {
-      newErrors.password = 'Contraseña requerida'
-    } else if (formData.password && formData.password.length < 6) {
-      newErrors.password = 'Contraseña debe tener al menos 6 caracteres'
-    }
-
-    // Email
-    if (!formData.correo.trim()) {
-      newErrors.correo = 'Email requerido'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
-      newErrors.correo = 'Email inválido'
-    }
-
-    // Teléfono (8 dígitos exactos)
-    if (!formData.telefono.trim()) {
-      newErrors.telefono = 'Teléfono requerido'
-    } else if (formData.telefono.length !== 8) {
-      newErrors.telefono = 'Teléfono debe tener exactamente 8 dígitos'
-    }
-
-    // Dirección
-    if (!formData.direccion.trim()) {
-      newErrors.direccion = 'Dirección requerida'
-    } else if (formData.direccion.trim().length < 10) {
-      newErrors.direccion = 'Dirección debe ser más específica (mín. 10 caracteres)'
-    }
-
-    // DPI (13 dígitos exactos)
-    if (!isEditing) {
-      if (!formData.dpi.trim()) {
-        newErrors.dpi = 'DPI requerido'
-      } else if (formData.dpi.length !== 13) {
-        newErrors.dpi = 'DPI debe tener exactamente 13 dígitos'
+    } else {
+      const parts = nameTrimmed.split(/\s+/)
+      if (parts[0].length > 100) {
+        newErrors.nombre = 'El nombre no puede exceder 100 caracteres'
+      } else if (parts.slice(1).join(' ').length > 100) {
+        newErrors.nombre = 'El apellido no puede exceder 100 caracteres'
       }
     }
 
-    // Nombre del trabajo
-    if (!formData.nombreTrabajo.trim()) {
-      newErrors.nombreTrabajo = 'Nombre del trabajo requerido'
+    // Username: NotEmpty, MinLength(4), MaxLength(50)
+    const usernameTrimmed = formData.username.trim()
+    if (!usernameTrimmed) {
+      newErrors.username = 'Usuario requerido'
+    } else if (usernameTrimmed.length < 4) {
+      newErrors.username = 'Mínimo 4 caracteres'
+    } else if (usernameTrimmed.length > 50) {
+      newErrors.username = 'Máximo 50 caracteres'
     }
 
-    // Ingresos mensuales (> Q100 y < Q1,000,000)
+    // Password: NotEmpty (solo crear), MinLength(6), MaxLength(100)
+    if (!isEditing && !formData.password) {
+      newErrors.password = 'Contraseña requerida'
+    } else if (formData.password) {
+      if (formData.password.length < 6) {
+        newErrors.password = 'Mínimo 6 caracteres'
+      } else if (formData.password.length > 100) {
+        newErrors.password = 'Máximo 100 caracteres'
+      }
+    }
+
+    // Email: NotEmpty, EmailAddress (AspNetCore), MaxLength(100)
+    const correoTrimmed = formData.correo.trim()
+    if (!correoTrimmed) {
+      newErrors.correo = 'Email requerido'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoTrimmed)) {
+      newErrors.correo = 'Formato de email inválido'
+    } else if (correoTrimmed.length > 100) {
+      newErrors.correo = 'Máximo 100 caracteres'
+    }
+
+    // Phone: NotEmpty, Matches(^\d{8}$)
+    if (!formData.telefono) {
+      newErrors.telefono = 'Teléfono requerido'
+    } else if (!/^\d{8}$/.test(formData.telefono)) {
+      newErrors.telefono = 'Debe tener exactamente 8 dígitos numéricos'
+    }
+
+    // Address: NotEmpty, MaxLength(200)
+    const direccionTrimmed = formData.direccion.trim()
+    if (!direccionTrimmed) {
+      newErrors.direccion = 'Dirección requerida'
+    } else if (direccionTrimmed.length > 200) {
+      newErrors.direccion = 'Máximo 200 caracteres'
+    }
+
+    // DPI: NotEmpty, Length(13) exactamente, Matches(^\d{13}$) — solo al crear
+    if (!isEditing) {
+      if (!formData.dpi) {
+        newErrors.dpi = 'DPI requerido'
+      } else if (!/^\d{13}$/.test(formData.dpi)) {
+        newErrors.dpi = 'Debe tener exactamente 13 dígitos numéricos'
+      }
+    }
+
+    // WorkName: NotEmpty, MaxLength(100)
+    const trabajoTrimmed = formData.nombreTrabajo.trim()
+    if (!trabajoTrimmed) {
+      newErrors.nombreTrabajo = 'Nombre del trabajo requerido'
+    } else if (trabajoTrimmed.length > 100) {
+      newErrors.nombreTrabajo = 'Máximo 100 caracteres'
+    }
+
+    // MonthlyIncome: GreaterThanOrEqualTo(100), LessThanOrEqualTo(1,000,000)
     const ingresos = parseFloat(formData.ingresosMensuales)
-    if (!formData.ingresosMensuales || isNaN(ingresos)) {
+    if (formData.ingresosMensuales === '' || isNaN(ingresos)) {
       newErrors.ingresosMensuales = 'Ingresos requeridos'
-    } else if (ingresos <= 100) {
-      newErrors.ingresosMensuales = 'Ingresos deben ser mayores a Q100.00'
+    } else if (ingresos < 100) {
+      newErrors.ingresosMensuales = 'El mínimo es Q100.00'
     } else if (ingresos > 1000000) {
-      newErrors.ingresosMensuales = 'Monto máximo: Q1,000,000.00'
+      newErrors.ingresosMensuales = 'El máximo es Q1,000,000.00'
     }
 
     setErrors(newErrors)
@@ -218,12 +239,15 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Nombre completo <span style={{ color: 'var(--danger)' }}>*</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(nombre y apellido)</span>
               </label>
               <input
                 type="text"
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
+                placeholder="Juan García"
+                maxLength={201}
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.nombre ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -239,12 +263,15 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Usuario <span style={{ color: 'var(--danger)' }}>*</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(4–50 caracteres)</span>
               </label>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
+                placeholder="juangarcia"
+                maxLength={50}
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.username ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -279,6 +306,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 DPI {isEditing ? <span style={{ color: 'var(--muted)' }}>(no editable)</span> : <span style={{ color: 'var(--danger)' }}>*</span>}
+                {!isEditing && <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(13 dígitos exactos)</span>}
               </label>
               <input
                 type="text"
@@ -286,6 +314,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
                 value={formData.dpi}
                 onChange={handleChange}
                 maxLength={13}
+                placeholder={!isEditing ? '1234567890123' : ''}
                 readOnly={isEditing}
                 className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none ${isEditing ? 'cursor-not-allowed' : ''}`}
                 style={{
@@ -296,18 +325,26 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
                 disabled={isLoading}
               />
               {errors.dpi && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.dpi}</p>}
+              {!isEditing && !errors.dpi && formData.dpi && (
+                <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                  {formData.dpi.length}/13 dígitos
+                </p>
+              )}
             </div>
 
             {/* Email */}
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Email <span style={{ color: 'var(--danger)' }}>*</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(máx. 100 caracteres)</span>
               </label>
               <input
                 type="email"
                 name="correo"
                 value={formData.correo}
                 onChange={handleChange}
+                placeholder="ejemplo@correo.com"
+                maxLength={100}
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.correo ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -323,7 +360,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Teléfono <span style={{ color: 'var(--danger)' }}>*</span>
-                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(8 dígitos)</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(8 dígitos exactos)</span>
               </label>
               <input
                 type="tel"
@@ -341,19 +378,28 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
                 disabled={isLoading}
               />
               {errors.telefono && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.telefono}</p>}
+              {!errors.telefono && formData.telefono && (
+                <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                  {formData.telefono.length}/8 dígitos
+                </p>
+              )}
             </div>
 
             {/* Password */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Contraseña {!isEditing && <span style={{ color: 'var(--danger)' }}>*</span>}
-                {isEditing && <span style={{ color: 'var(--muted)' }}> (dejar vacío para no cambiar)</span>}
+                {isEditing
+                  ? <span style={{ color: 'var(--muted)' }}> (dejar vacío para no cambiar)</span>
+                  : <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(mín. 6, máx. 100 caracteres)</span>
+                }
               </label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                maxLength={100}
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.password ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -361,7 +407,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
                   color: 'var(--text)',
                 }}
                 disabled={isLoading}
-                placeholder={isEditing ? 'Dejar vacío para no modificar' : ''}
+                placeholder={isEditing ? 'Dejar vacío para no modificar' : 'Mínimo 6 caracteres'}
               />
               {errors.password && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.password}</p>}
             </div>
@@ -370,12 +416,15 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Dirección <span style={{ color: 'var(--danger)' }}>*</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(máx. 200 caracteres)</span>
               </label>
               <textarea
                 name="direccion"
                 value={formData.direccion}
                 onChange={handleChange}
                 rows={2}
+                maxLength={200}
+                placeholder="Zona, calle, avenida, número de casa"
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.direccion ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -391,12 +440,15 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                 Nombre del trabajo <span style={{ color: 'var(--danger)' }}>*</span>
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--muted)' }}>(máx. 100 caracteres)</span>
               </label>
               <input
                 type="text"
                 name="nombreTrabajo"
                 value={formData.nombreTrabajo}
                 onChange={handleChange}
+                placeholder="Empresa S.A."
+                maxLength={100}
                 className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
                 style={{
                   border: `1px solid ${errors.nombreTrabajo ? 'var(--danger)' : 'var(--gris-medio)'}`,
@@ -422,7 +474,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, user = null, 
                   value={formData.ingresosMensuales}
                   onChange={handleChange}
                   placeholder="5000.00"
-                  min="101"
+                  min="100"
                   max="1000000"
                   step="0.01"
                   className="w-full pl-8 pr-3 py-2 rounded-lg focus:ring-2 focus:outline-none"
