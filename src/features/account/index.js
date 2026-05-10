@@ -1,8 +1,6 @@
 // Account Pages
 export { default as AccountPage } from './pages/AccountPage'
+export { default as ProfilePage } from './pages/ProfilePage'
 
-// Account Services
-export { getUsers, createUser, updateUser, deleteUser, getProfile } from './service/userService'
-
-// Account Store
-export { default as useUserStore } from './store/useUserStore'
+// Account Components
+export { default as ProfileButton } from './components/ProfileButton'

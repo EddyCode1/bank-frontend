@@ -20,7 +20,7 @@ const LoginPage = () => {
       const result = await authService.login(data.email, data.password)
 
       if (result.success) {
-        login(result.token, result.user)
+        login(result.token, result.user, result.refreshToken)
         toast.success('Sesión iniciada correctamente')
         navigate('/loby')
       }
@@ -73,7 +73,7 @@ const LoginPage = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-xl bg-[var(--primary)] py-2.5 font-semibold text-white transition hover:bg-[#4A4BE0] disabled:cursor-not-allowed disabled:bg-[var(--muted)]"
+          className="w-full rounded-xl bg-[var(--primary)] py-2.5 font-semibold text-white transition hover:bg-[var(--primary-dark)] disabled:cursor-not-allowed disabled:bg-[var(--muted)]"
         >
           {isLoading ? 'Cargando...' : 'Iniciar sesión'}
         </button>

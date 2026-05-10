@@ -2,6 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -14,8 +17,8 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      '/SistemaBancarioAdmin': {
-        target: 'http://localhost:3000',
+      '/api': {
+        target: 'http://localhost:5025',
         changeOrigin: true,
         secure: false,
       },
