@@ -38,6 +38,10 @@ export default function ProductPage() {
     setEditingProduct(null)
   }
 
+  const handleToggleStatus = async (productId, currentStatus) => {
+    await updateProduct(productId, { is_active: !currentStatus })
+  }
+
   const onSubmit = async (data) => {
     if (editingProduct) {
       await updateProduct(editingProduct._id, data)
@@ -122,7 +126,7 @@ export default function ProductPage() {
             <p className="mt-4 font-semibold" style={{ color: '#2C4A7A' }}>Sincronizando con el servidor...</p>
           </div>
         ) : products.length > 0 ? (
-          <ProductList products={products} isAdmin={isAdmin} onEdit={handleEdit} onDelete={deleteProduct} />
+          <ProductList products={products} isAdmin={isAdmin} onEdit={handleEdit} onDelete={deleteProduct} onToggleStatus={handleToggleStatus} />
         ) : (
           <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed" style={{ borderColor: '#94A3B8' }}>
             <p className="text-xl font-semibold" style={{ color: '#94A3B8' }}>No hay registros para mostrar</p>

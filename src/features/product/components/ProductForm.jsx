@@ -1,4 +1,27 @@
+<<<<<<< Updated upstream
 import React, { useState, useEffect } from 'react'
+=======
+import { useState } from 'react'
+
+function buildInitialFormData(product) {
+  if (!product) {
+    return {
+      name: '',
+      description: '',
+      type: 'PRODUCTO',
+      paymentType: 'UNICO',
+      is_active: true,
+    }
+  }
+  return {
+    name: product.name,
+    description: product.description || '',
+    type: product.type,
+    paymentType: product.paymentType || 'UNICO',
+    is_active: product.is_active !== undefined ? product.is_active : true,
+  }
+}
+>>>>>>> Stashed changes
 
 export default function ProductForm({ product, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
@@ -39,10 +62,8 @@ export default function ProductForm({ product, onSubmit, onClose }) {
       newErrors.type = 'El tipo es requerido'
     }
 
-    if (!formData.price) {
-      newErrors.price = 'El precio es requerido'
-    } else if (isNaN(formData.price) || parseFloat(formData.price) < 0) {
-      newErrors.price = 'El precio debe ser un número válido no negativo'
+    if (!formData.paymentType) {
+      newErrors.paymentType = 'El tipo de pago es requerido'
     }
 
     setErrors(newErrors)
@@ -74,7 +95,12 @@ export default function ProductForm({ product, onSubmit, onClose }) {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         type: formData.type,
+<<<<<<< Updated upstream
         price: parseFloat(formData.price)
+=======
+        paymentType: formData.paymentType,
+        is_active: formData.is_active,
+>>>>>>> Stashed changes
       })
     } finally {
       setIsSubmitting(false)
@@ -128,7 +154,7 @@ export default function ProductForm({ product, onSubmit, onClose }) {
           </div>
         </div>
 
-        {/* Fila: Tipo y Precio */}
+        {/* Fila: Tipo y Tipo de Pago */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold mb-2" style={{ color: '#1E293B' }}>
@@ -148,23 +174,34 @@ export default function ProductForm({ product, onSubmit, onClose }) {
 
           <div>
             <label className="block text-sm font-bold mb-2" style={{ color: '#1E293B' }}>
-              Monto Unitario (Q) *
+              Tipo de Pago *
             </label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
+            <select
+              name="paymentType"
+              value={formData.paymentType}
               onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              className="w-full px-4 py-3 border rounded-xl outline-none"
+              className="w-full px-4 py-3 border rounded-xl outline-none bg-white cursor-pointer"
               style={{
+<<<<<<< Updated upstream
                 borderColor: errors.price ? '#FB7185' : '#CBD5E1',
                 color: '#1E293B'
               }}
             />
             {errors.price && (
               <p className="text-xs mt-1 font-medium" style={{ color: '#EF4444' }}>{errors.price}</p>
+=======
+                borderColor: errors.paymentType ? '#FB7185' : '#CBD5E1',
+                color: '#1E293B',
+              }}
+            >
+              <option value="UNICO">Pago Único</option>
+              <option value="MENSUAL">Pago Mensual</option>
+            </select>
+            {errors.paymentType && (
+              <p className="text-xs mt-1 font-medium" style={{ color: '#EF4444' }}>
+                {errors.paymentType}
+              </p>
+>>>>>>> Stashed changes
             )}
           </div>
         </div>
@@ -190,6 +227,40 @@ export default function ProductForm({ product, onSubmit, onClose }) {
             {formData.description.length}/500
           </p>
         </div>
+
+        {/* Estado del Producto */}
+        {product && (
+          <div className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: '#F8FAFC', borderColor: '#E2E8F0', border: '1px solid #E2E8F0' }}>
+            <div>
+              <label className="block text-sm font-bold" style={{ color: '#1E293B' }}>
+                Estado del Producto
+              </label>
+              <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
+                {formData.is_active ? 'Producto activo' : 'Producto inactivo'}
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_active"
+                checked={formData.is_active}
+                onChange={(e) => {
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }}
+                className="sr-only peer"
+              />
+              <div
+                className="w-12 h-6 rounded-full transition-colors peer-checked:bg-green-500"
+                style={{
+                  backgroundColor: formData.is_active ? '#10B981' : '#CBD5E1',
+                }}
+              />
+              <span
+                className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"
+              />
+            </label>
+          </div>
+        )}
 
         {/* BOTONES DE ACCIÓN */}
         <div className="flex gap-4 pt-6 border-t" style={{ borderColor: '#F1F5F9' }}>

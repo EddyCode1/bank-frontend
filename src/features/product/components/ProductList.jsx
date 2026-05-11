@@ -1,6 +1,10 @@
+<<<<<<< Updated upstream
 import React from 'react'
 
 export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
+=======
+export default function ProductList({ products, isAdmin, onEdit, onDelete, onToggleStatus }) {
+>>>>>>> Stashed changes
   
   // Badge de categoría (Producto/Servicio)
   const getTypeBadge = (type) => {
@@ -14,6 +18,11 @@ export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
     return is_active
       ? { backgroundColor: '#DCF3EE', color: '#1FA187' } // Éxito (Jade)
       : { backgroundColor: '#FFE4E6', color: '#E11D48' } // Error (Rojo)
+  }
+
+  // Obtener etiqueta de tipo de pago
+  const getPaymentTypeLabel = (paymentType) => {
+    return paymentType === 'MENSUAL' ? 'Mensual' : 'Único'
   }
 
   return (
@@ -52,10 +61,10 @@ export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#94A3B8' }}>
-                  Precio:
+                  Pago:
                 </span>
-                <span className="font-black text-xl" style={{ color: '#2C4A7A' }}>
-                  Q{Number(product.price).toFixed(2)}
+                <span className="font-bold text-sm" style={{ color: '#2C4A7A' }}>
+                  {getPaymentTypeLabel(product.paymentType)}
                 </span>
               </div>
 
@@ -74,20 +83,33 @@ export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
 
           {/* ACCIONES DE ADMINISTRADOR */}
           {isAdmin && (
-            <div className="p-4 flex gap-3" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+            <div className="p-4 space-y-3" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => onEdit(product)}
+                  className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold border hover:bg-white active:scale-95"
+                  style={{ color: '#2F7FBF', borderColor: '#2F7FBF' }}
+                >
+                  Modificar
+                </button>
+                <button
+                  onClick={() => onDelete(product._id)}
+                  className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold text-white hover:opacity-90 active:scale-95"
+                  style={{ backgroundColor: '#EF4444' }}
+                >
+                  Eliminar
+                </button>
+              </div>
               <button
-                onClick={() => onEdit(product)}
-                className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold border hover:bg-white active:scale-95"
-                style={{ color: '#2F7FBF', borderColor: '#2F7FBF' }}
+                onClick={() => onToggleStatus(product._id, product.is_active)}
+                className="w-full px-3 py-2 rounded-xl transition-all text-sm font-bold border hover:bg-white active:scale-95"
+                style={{
+                  color: product.is_active ? '#DC2626' : '#10B981',
+                  borderColor: product.is_active ? '#DC2626' : '#10B981',
+                  backgroundColor: product.is_active ? '#FEE2E2' : '#ECFDF5',
+                }}
               >
-                Modificar
-              </button>
-              <button
-                onClick={() => onDelete(product._id)}
-                className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold text-white hover:opacity-90 active:scale-95"
-                style={{ backgroundColor: '#EF4444' }}
-              >
-                Eliminar
+                {product.is_active ? 'Desactivar' : 'Activar'}
               </button>
             </div>
           )}
