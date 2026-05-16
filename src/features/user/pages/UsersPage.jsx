@@ -9,7 +9,10 @@ export default function UsersPage() {
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
-    
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize] = useState(10)
+    const [totalUsers, setTotalUsers] = useState(0)
+
     // Modal states
     const [isFormModalOpen, setIsFormModalOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -23,14 +26,22 @@ export default function UsersPage() {
         setTimeout(() => setNotification(null), 4000)
     }
 
-    const loadUsers = async () => {
+    const loadUsers = async (page = 1) => {
         setLoading(true)
         try {
-            const result = await getUsers()
+            const result = await getUsers({
+                search: searchTerm.trim() || undefined,
+                page,
+                limit: pageSize,
+            })
             if (result.success) {
-                setUsers(result.data)
+                setUsers(result.data.items)
+                setTotalUsers(result.data.total)
+                setCurrentPage(page)
+            } else {
+                showNotification(result.error || 'Error al cargar usuarios', 'error')
             }
-        } catch {
+        } catch (error) {
             showNotification('Error al cargar usuarios', 'error')
         } finally {
             setLoading(false)
@@ -38,15 +49,14 @@ export default function UsersPage() {
     }
 
     useEffect(() => {
-        queueMicrotask(() => loadUsers())
+        loadUsers(1)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const filteredUsers = users.filter((user) =>
-        user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const handleSearch = (event) => {
+        event?.preventDefault()
+        loadUsers(1)
+    }
 
     const handleViewDetail = (userId) => {
         navigate(`/loby/users/${userId}`)
@@ -69,6 +79,24 @@ export default function UsersPage() {
         setIsDeleteModalOpen(true)
     }
 
+    const toggleUserStatus = async (user) => {
+        const nextStatus = (user.status || 'active').toLowerCase() === 'active' ? 'inactive' : 'active'
+        setActionLoading(true)
+        try {
+            const result = await updateUser(user.id || user._id, { status: nextStatus })
+            if (result.success) {
+                showNotification(`Usuario ${nextStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success')
+                loadUsers(currentPage)
+            } else {
+                showNotification(result.error || 'Error al cambiar estado', 'error')
+            }
+        } catch (error) {
+            showNotification(error.message || 'Error inesperado al cambiar estado', 'error')
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     const handleFormSubmit = async (userData) => {
         setActionLoading(true)
         setFormError(null)
@@ -78,7 +106,7 @@ export default function UsersPage() {
                 if (result.success) {
                     showNotification('Usuario actualizado correctamente', 'success')
                     setIsFormModalOpen(false)
-                    loadUsers()
+                    loadUsers(currentPage)
                 } else {
                     setFormError(result.error || 'Error al actualizar usuario')
                 }
@@ -92,7 +120,7 @@ export default function UsersPage() {
                     }
                     setIsFormModalOpen(false)
                     setFormError(null)
-                    loadUsers()
+                    loadUsers(1)
                 } else {
                     setFormError(result.error || 'Error al crear usuario')
                 }
@@ -111,7 +139,7 @@ export default function UsersPage() {
             if (result.success) {
                 showNotification('Usuario eliminado correctamente', 'success')
                 setIsDeleteModalOpen(false)
-                loadUsers()
+                loadUsers(currentPage)
             } else {
                 showNotification(result.error || 'Error al eliminar usuario', 'error')
             }
@@ -124,6 +152,8 @@ export default function UsersPage() {
             setActionLoading(false)
         }
     }
+
+    const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize))
 
     return (
         <div className="p-6" style={{ background: 'var(--bg)' }}>
@@ -140,116 +170,97 @@ export default function UsersPage() {
                 </div>
             )}
 
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>Usuarios</h1>
                     <p className="mt-1" style={{ color: 'var(--muted)' }}>Gestión y visualización de usuarios del sistema</p>
                 </div>
                 <button
                     onClick={handleCreateUser}
-                    className="px-4 py-2 rounded-lg font-medium transition hover:opacity-90 flex items-center gap-2"
-                    style={{
-                        background: 'var(--primary)',
-                        color: 'white',
-                    }}
+                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                 >
-                    <span className="text-xl">+</span>
-                    Nuevo Usuario
+                    + Nuevo Usuario
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
+            <form onSubmit={handleSearch} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto]">
                 <input
                     type="text"
                     placeholder="Buscar por nombre, email o usuario..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg focus:ring-2 focus:outline-none transition"
-                    style={{
-                        border: '1px solid var(--gris-medio)',
-                        background: 'var(--surface)',
-                        color: 'var(--text)',
-                        '--tw-ring-color': 'var(--primary)',
-                    }}
+                    className="w-full rounded-2xl border border-[var(--border)] px-4 py-3 bg-white text-[var(--text)]"
                 />
-            </div>
+                <button
+                    type="submit"
+                    className="rounded-2xl bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                >
+                    Buscar
+                </button>
+            </form>
 
-            {/* Table */}
-            <div className="rounded-lg shadow overflow-hidden" style={{ background: 'var(--surface)' }}>
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
                 {loading ? (
                     <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>
                         Cargando usuarios...
                     </div>
-                ) : filteredUsers.length === 0 ? (
+                ) : users.length === 0 ? (
                     <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>
                         No hay usuarios disponibles
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead style={{ background: 'var(--gris-claro-fondo)', borderBottom: '1px solid var(--gris-medio)' }}>
+                    <table className="min-w-full border-separate border-spacing-0 text-left">
+                        <thead className="bg-[var(--gris-claro-fondo)] border-b border-[var(--border)]">
                             <tr>
-                                <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Nombre</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Usuario</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Email</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Teléfono</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Rol</th>
-                                <th className="px-6 py-3 text-right text-sm font-semibold" style={{ color: 'var(--gris-oscuro)' }}>Acciones</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Nombre</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Usuario</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Email</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Teléfono</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Rol</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-[var(--gris-oscuro)]">Estado</th>
+                                <th className="px-6 py-4 text-right text-sm font-semibold text-[var(--gris-oscuro)]">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody style={{ borderTop: '1px solid var(--gris-medio)' }}>
-                            {filteredUsers.map((user) => (
-                                <tr key={user.id || user._id} className="hover:opacity-80 transition" style={{ borderBottom: '1px solid var(--gris-medio)' }}>
-                                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--text)' }}>{user.nombre || 'N/A'}</td>
-                                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--muted)' }}>{user.username || 'N/A'}</td>
-                                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--muted)' }}>{user.email || 'N/A'}</td>
-                                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--muted)' }}>{user.telefono || 'N/A'}</td>
+                        <tbody>
+                            {users.map((user) => (
+                                <tr key={user.id || user._id} className="border-b border-[var(--border)] hover:bg-[var(--gris-claro-fondo)] transition">
+                                    <td className="px-6 py-4 text-sm text-[var(--text)]">{user.nombre || 'N/A'}</td>
+                                    <td className="px-6 py-4 text-sm text-[var(--muted)]">{user.username || 'N/A'}</td>
+                                    <td className="px-6 py-4 text-sm text-[var(--muted)]">{user.email || 'N/A'}</td>
+                                    <td className="px-6 py-4 text-sm text-[var(--muted)]">{user.telefono || 'N/A'}</td>
                                     <td className="px-6 py-4 text-sm">
-                                        <span
-                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                            style={{
-                                                background: 'rgba(47, 127, 191, 0.1)',
-                                                color: 'var(--azul-vibrante)'
-                                            }}
-                                        >
+                                        <span className="inline-flex items-center rounded-full bg-[rgba(47,127,191,0.1)] px-3 py-1 text-xs font-semibold text-[var(--azul-vibrante)]">
                                             {user.rol || 'USER'}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 text-sm">
+                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${((user.status || 'active').toLowerCase() === 'active') ? 'bg-[rgba(31,161,135,0.12)] text-[var(--verde-jade)]' : 'bg-[rgba(239,68,68,0.12)] text-[var(--danger)]'}`}>
+                                            {(user.status || 'active').toUpperCase()}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <div className="flex flex-wrap justify-end gap-2">
                                             <button
                                                 onClick={() => handleViewDetail(user.id || user._id)}
-                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
-                                                style={{
-                                                    border: '1px solid var(--azul-vibrante)',
-                                                    color: 'var(--azul-vibrante)',
-                                                    background: 'transparent'
-                                                }}
-                                                title="Ver detalle"
+                                                className="rounded-2xl border border-[var(--azul-vibrante)] px-3 py-2 text-sm font-semibold text-[var(--azul-vibrante)] transition hover:opacity-90"
                                             >
                                                 Ver
                                             </button>
                                             <button
                                                 onClick={() => handleEditUser(user)}
-                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
-                                                style={{
-                                                    border: '1px solid var(--naranja)',
-                                                    color: 'var(--naranja)',
-                                                    background: 'transparent'
-                                                }}
-                                                title="Editar usuario"
+                                                className="rounded-2xl border border-[var(--naranja)] px-3 py-2 text-sm font-semibold text-[var(--naranja)] transition hover:opacity-90"
                                             >
                                                 Editar
                                             </button>
                                             <button
+                                                onClick={() => toggleUserStatus(user)}
+                                                className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:opacity-90"
+                                            >
+                                                {((user.status || 'active').toLowerCase() === 'active') ? 'Desactivar' : 'Activar'}
+                                            </button>
+                                            <button
                                                 onClick={() => handleDeleteClick(user)}
-                                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80"
-                                                style={{
-                                                    border: '1px solid var(--danger)',
-                                                    color: 'var(--danger)',
-                                                    background: 'transparent'
-                                                }}
-                                                title="Eliminar usuario"
+                                                className="rounded-2xl border border-[var(--danger)] px-3 py-2 text-sm font-semibold text-[var(--danger)] transition hover:opacity-90"
                                             >
                                                 Eliminar
                                             </button>
@@ -262,14 +273,29 @@ export default function UsersPage() {
                 )}
             </div>
 
-            {/* Summary */}
-            <div className="mt-6 p-4 rounded-lg border" style={{ background: 'var(--gris-claro-fondo)', borderColor: 'var(--gris-medio)' }}>
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                    Total de usuarios: <span className="font-semibold" style={{ color: 'var(--text)' }}>{users.length}</span>
-                </p>
+            <div className="mt-6 flex flex-col gap-4 justify-between rounded-2xl border border-[var(--border)] bg-[var(--gris-claro-fondo)] p-4 sm:flex-row sm:items-center">
+                <p className="text-sm text-[var(--muted)]">Total de usuarios: {totalUsers}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => loadUsers(currentPage - 1)}
+                        className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        Anterior
+                    </button>
+                    <span className="text-sm text-[var(--muted)]">Página {currentPage} de {totalPages}</span>
+                    <button
+                        type="button"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => loadUsers(currentPage + 1)}
+                        className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        Siguiente
+                    </button>
+                </div>
             </div>
 
-            {/* Modals */}
             <UserFormModal
                 isOpen={isFormModalOpen}
                 onClose={() => { setIsFormModalOpen(false); setFormError(null) }}

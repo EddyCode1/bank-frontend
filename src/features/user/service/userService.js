@@ -34,18 +34,40 @@ export const generateAccountNumber = () =>
  * Cuando la sesión es la cuenta de testing (ADMINB) se devuelven los
  * usuarios de ejemplo para poder probar el módulo sin datos reales.
  */
-export const getUsers = async () => {
+export const getUsers = async ({ search, page = 1, limit = 10 } = {}) => {
   if (isTestingAdmin()) {
-    return { success: true, data: MOCK_USERS }
+    return {
+      success: true,
+      data: {
+        items: MOCK_USERS,
+        total: MOCK_USERS.length,
+        pagination: { page: 1, limit: MOCK_USERS.length, total: MOCK_USERS.length },
+      },
+    }
   }
+
   try {
-    const response = await adminClient.get('/users')
+    const response = await adminClient.get('/users', {
+      params: {
+        search: search?.trim() || undefined,
+        page,
+        limit,
+      },
+    })
     const raw = response.data?.data ?? response.data
-    const items = Array.isArray(raw) ? raw : (raw?.items ?? [])
-    return { success: true, data: items.map(mapUser) }
+    const items = Array.isArray(raw) ? raw : raw?.items ?? raw?.users ?? []
+    const total = Number(raw?.pagination?.total ?? raw?.total ?? items.length)
+    return {
+      success: true,
+      data: {
+        items: items.map(mapUser),
+        total,
+        pagination: raw?.pagination ?? { page, limit, total },
+      },
+    }
   } catch (error) {
     console.error('Error fetching users:', error)
-    return { success: false, data: [], error: parseBackendError(error) }
+    return { success: false, data: { items: [], total: 0 }, error: parseBackendError(error) }
   }
 }
 
@@ -148,6 +170,7 @@ export const updateUser = async (userId, userData) => {
       phone: userData.telefono || undefined,
       workName: userData.nombreTrabajo || undefined,
       monthlyIncome: userData.ingresosMensuales ? Number(userData.ingresosMensuales) : undefined,
+      status: userData.status || userData.estado || undefined,
     }
 
     const response = await adminClient.put(`/users/${userId}`, payload)
