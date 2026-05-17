@@ -16,19 +16,27 @@ export default function TransactionTable({ transactions, loading, onTransactionC
   }
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (!date) return 'N/A'
+    try {
+      return new Date(date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch (e) {
+      return 'Fecha inválida'
+    }
   }
 
   const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') return 'Q0.00'
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'GTQ',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount)
   }
 
@@ -46,48 +54,58 @@ export default function TransactionTable({ transactions, loading, onTransactionC
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => (
-            <tr
-              key={transaction._id || transaction.id}
-              className="border-b hover:bg-gray-50 cursor-pointer"
-            >
-              <td className="px-4 py-3 text-sm">
-                {(transaction._id || transaction.id)?.substring(0, 8)}...
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                  {transaction.type || transaction.transactionType || 'N/A'}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm font-semibold">
-                <span className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatCurrency(transaction.amount || 0)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm">
-                {formatDate(transaction.createdAt || transaction.date || new Date())}
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                    (transaction.status || 'completed').toLowerCase() === 'completed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {transaction.status || 'Completada'}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <button
-                  onClick={() => onTransactionClick?.(transaction)}
-                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                >
-                  Ver
-                </button>
-              </td>
-            </tr>
-          ))}
+          {transactions.map((transaction) => {
+            const txId = transaction._id || transaction.id
+            const txType = transaction.type || transaction.transactionType || 'N/A'
+            const txAmount = transaction.amount || 0
+            const txStatus = transaction.status || 'completed'
+            const txDate = transaction.createdAt || transaction.date
+            
+            return (
+              <tr
+                key={txId}
+                className="border-b hover:bg-gray-50 cursor-pointer"
+              >
+                <td className="px-4 py-3 text-sm">
+                  {String(txId).substring(0, 8)}...
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                    {txType}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm font-semibold">
+                  <span className={txAmount >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {formatCurrency(txAmount)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  {formatDate(txDate)}
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  <span
+                    className={`inline-block px-2 py-1 rounded text-xs font-medium capitalize ${
+                      txStatus.toLowerCase() === 'completed' || txStatus.toLowerCase() === 'completada'
+                        ? 'bg-green-100 text-green-800'
+                        : txStatus.toLowerCase() === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {txStatus}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => onTransactionClick?.(transaction)}
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                  >
+                    Ver
+                  </button>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

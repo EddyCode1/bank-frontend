@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useTransactionStore from '../store/useTransactionStore'
 import TransactionTable from '../components/TransactionTable'
 import DepositForm from '../components/DepositForm'
+import TransferForm from '../components/TransferForm'
 import TransactionDetail from '../components/TransactionDetail'
 
 export default function TransactionPage() {
-  const [activeTab, setActiveTab] = useState('my-transactions') // 'my-transactions', 'history', 'deposit'
+  const [activeTab, setActiveTab] = useState('my-transactions') // 'my-transactions', 'history', 'deposit', 'transfer'
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [filters, setFilters] = useState({ limit: 50, offset: 0 })
+  const navigate = useNavigate()
 
   const {
     transactions,
@@ -56,15 +59,27 @@ export default function TransactionPage() {
   }
 
   const handlePageChange = (newOffset) => {
+    if (newOffset < 0 || (newOffset + filters.limit > pagination.total && pagination.total > 0)) {
+      return
+    }
     setFilters(prev => ({ ...prev, offset: newOffset }))
   }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Transacciones</h1>
-        <p className="text-gray-600 mt-2">Gestiona y visualiza tus transacciones bancarias</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Transacciones</h1>
+          <p className="text-gray-600 mt-2">Gestiona y visualiza tus transacciones bancarias</p>
+        </div>
+        <button
+          onClick={() => navigate('/loby/favorites')}
+          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md transition flex items-center gap-2"
+        >
+          <span>⭐</span>
+          Ir a Favoritos
+        </button>
       </div>
 
       {/* Error Message */}
@@ -75,10 +90,10 @@ export default function TransactionPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-2 border-b">
+      <div className="mb-6 flex gap-2 border-b overflow-x-auto">
         <button
           onClick={() => { setActiveTab('my-transactions'); setFilters({ limit: 50, offset: 0 }); }}
-          className={`px-6 py-3 font-medium border-b-2 transition ${
+          className={`px-6 py-3 font-medium border-b-2 transition whitespace-nowrap ${
             activeTab === 'my-transactions'
               ? 'border-blue-600 text-blue-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -88,7 +103,7 @@ export default function TransactionPage() {
         </button>
         <button
           onClick={() => { setActiveTab('history'); setFilters({ limit: 50, offset: 0 }); }}
-          className={`px-6 py-3 font-medium border-b-2 transition ${
+          className={`px-6 py-3 font-medium border-b-2 transition whitespace-nowrap ${
             activeTab === 'history'
               ? 'border-blue-600 text-blue-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -98,13 +113,23 @@ export default function TransactionPage() {
         </button>
         <button
           onClick={() => setActiveTab('deposit')}
-          className={`px-6 py-3 font-medium border-b-2 transition ${
+          className={`px-6 py-3 font-medium border-b-2 transition whitespace-nowrap ${
             activeTab === 'deposit'
               ? 'border-blue-600 text-blue-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
           Crear Depósito
+        </button>
+        <button
+          onClick={() => setActiveTab('transfer')}
+          className={`px-6 py-3 font-medium border-b-2 transition whitespace-nowrap ${
+            activeTab === 'transfer'
+              ? 'border-green-600 text-green-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Realizar Transferencia
         </button>
       </div>
 
@@ -203,6 +228,9 @@ export default function TransactionPage() {
 
         {/* Deposit Tab */}
         {activeTab === 'deposit' && <DepositForm />}
+
+        {/* Transfer Tab */}
+        {activeTab === 'transfer' && <TransferForm />}
       </div>
 
       {/* Transaction Detail Modal */}

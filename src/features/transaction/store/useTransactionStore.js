@@ -122,17 +122,61 @@ const useTransactionStore = create((set, get) => ({
   // Create deposit
   createDeposit: async (depositData) => {
     set({ loading: true, error: null })
-    const result = await transactionService.createDeposit(depositData)
-    
-    if (result.success) {
-      set({ loading: false })
-      // Refresh transactions after creating deposit
-      const state = get()
-      await state.fetchMyTransactions()
-    } else {
-      set({ error: result.error, loading: false })
+    try {
+      const result = await transactionService.createDeposit(depositData)
+      
+      if (result.success) {
+        // Pequeño delay para asegurar que el backend procesó el depósito
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Refrescar transacciones para reflejar el nuevo depósito
+        const state = get()
+        const filters = state.pagination.offset ? {
+          offset: state.pagination.offset,
+          limit: state.pagination.limit
+        } : {}
+        
+        await state.fetchMyTransactions(filters)
+        set({ loading: false })
+      } else {
+        set({ error: result.error, loading: false })
+      }
+      return result
+    } catch (error) {
+      const errorMsg = error.message || 'Error al crear depósito'
+      set({ error: errorMsg, loading: false })
+      return { success: false, error: errorMsg }
     }
-    return result
+  },
+
+  // Create transfer
+  createTransfer: async (transferData) => {
+    set({ loading: true, error: null })
+    try {
+      const result = await transactionService.createTransfer(transferData)
+      
+      if (result.success) {
+        // Pequeño delay para asegurar que el backend procesó la transferencia
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Refrescar transacciones para reflejar la nueva transferencia
+        const state = get()
+        const filters = state.pagination.offset ? {
+          offset: state.pagination.offset,
+          limit: state.pagination.limit
+        } : {}
+        
+        await state.fetchMyTransactions(filters)
+        set({ loading: false })
+      } else {
+        set({ error: result.error, loading: false })
+      }
+      return result
+    } catch (error) {
+      const errorMsg = error.message || 'Error al realizar transferencia'
+      set({ error: errorMsg, loading: false })
+      return { success: false, error: errorMsg }
+    }
   },
 
   // Clear state

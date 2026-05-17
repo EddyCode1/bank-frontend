@@ -27,23 +27,35 @@ export default function TransactionDetail({ transactionId, onClose }) {
   }
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (!date) return 'N/A'
+    try {
+      return new Date(date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch (e) {
+      return 'Fecha inválida'
+    }
   }
 
   const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') return 'Q0.00'
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'GTQ',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount)
   }
 
   const tx = currentTransaction.data || currentTransaction
+  const transactionId_display = tx._id || tx.id || 'N/A'
+  const transactionType = tx.type || tx.transactionType || 'Desconocido'
+  const transactionAmount = tx.amount !== undefined ? tx.amount : 0
+  const transactionStatus = tx.status || 'completada'
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -61,37 +73,39 @@ export default function TransactionDetail({ transactionId, onClose }) {
         <div className="space-y-4">
           <div className="border-b pb-2">
             <p className="text-sm text-gray-600">ID Transacción</p>
-            <p className="font-semibold break-all text-sm">{tx._id || tx.id}</p>
+            <p className="font-semibold break-all text-sm">{transactionId_display}</p>
           </div>
 
           <div className="border-b pb-2">
             <p className="text-sm text-gray-600">Tipo</p>
-            <p className="font-semibold">{tx.type || tx.transactionType || 'N/A'}</p>
+            <p className="font-semibold capitalize">{transactionType}</p>
           </div>
 
           <div className="border-b pb-2">
             <p className="text-sm text-gray-600">Monto</p>
-            <p className={`font-semibold text-lg ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(tx.amount || 0)}
+            <p className={`font-semibold text-lg ${transactionAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(transactionAmount)}
             </p>
           </div>
 
           <div className="border-b pb-2">
             <p className="text-sm text-gray-600">Estado</p>
             <span
-              className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                (tx.status || 'completed').toLowerCase() === 'completed'
+              className={`inline-block px-2 py-1 rounded text-xs font-medium capitalize ${
+                transactionStatus.toLowerCase() === 'completed' || transactionStatus.toLowerCase() === 'completada'
                   ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
+                  : transactionStatus.toLowerCase() === 'pending'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-red-100 text-red-800'
               }`}
             >
-              {tx.status || 'Completada'}
+              {transactionStatus}
             </span>
           </div>
 
           <div className="border-b pb-2">
             <p className="text-sm text-gray-600">Fecha</p>
-            <p className="font-semibold">{formatDate(tx.createdAt || tx.date || new Date())}</p>
+            <p className="font-semibold">{formatDate(tx.createdAt || tx.date)}</p>
           </div>
 
           {tx.reference && (
@@ -119,6 +133,20 @@ export default function TransactionDetail({ transactionId, onClose }) {
             <div className="pb-2">
               <p className="text-sm text-gray-600">Descripción</p>
               <p className="font-semibold">{tx.description}</p>
+            </div>
+          )}
+
+          {tx.accountNumber && (
+            <div className="pb-2">
+              <p className="text-sm text-gray-600">Número de Cuenta</p>
+              <p className="font-semibold break-all text-sm">{tx.accountNumber}</p>
+            </div>
+          )}
+
+          {tx.currency && (
+            <div className="pb-2">
+              <p className="text-sm text-gray-600">Moneda</p>
+              <p className="font-semibold">{tx.currency}</p>
             </div>
           )}
         </div>
