@@ -25,11 +25,30 @@ function offsetToPage(offset, limit) {
 
 /**
  * Contrato createDeposit del servidor Node: accountNumber, amount, currency opcional, description opcional.
+ * Valida y mapea correctamente los datos del depósito
  */
 function mapDepositBody(depositData) {
+  // Validar datos de entrada
+  if (!depositData) {
+    throw new Error('Los datos del depósito no pueden estar vacíos')
+  }
+
   const accountNumber = String(depositData.accountNumber ?? depositData.accountId ?? '').trim()
+  if (!accountNumber) {
+    throw new Error('El número de cuenta es requerido')
+  }
+
   const rawAmount = depositData.amount
   const amount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount))
+  
+  if (isNaN(amount)) {
+    throw new Error('El monto debe ser un número válido')
+  }
+  
+  if (amount <= 0) {
+    throw new Error('El monto debe ser mayor a 0')
+  }
+
   const descriptionParts = [depositData.reference, depositData.concept].filter(
     (x) => x != null && String(x).trim() !== ''
   )
@@ -41,6 +60,56 @@ function mapDepositBody(depositData) {
     currency: depositData.currency ?? 'GTQ',
   }
   if (description) body.description = description
+  
+  return body
+}
+
+/**
+ * Mapea datos de transferencia al formato esperado por el servidor
+ */
+function mapTransferBody(transferData) {
+  if (!transferData) {
+    throw new Error('Los datos de la transferencia no pueden estar vacíos')
+  }
+
+  const sourceAccountNumber = String(transferData.sourceAccountNumber ?? transferData.sourceAccountId ?? '').trim()
+  if (!sourceAccountNumber) {
+    throw new Error('La cuenta origen es requerida')
+  }
+
+  const destinationAccountNumber = String(transferData.destinationAccountNumber ?? transferData.destinationAccountId ?? '').trim()
+  if (!destinationAccountNumber) {
+    throw new Error('La cuenta destino es requerida')
+  }
+
+  if (sourceAccountNumber === destinationAccountNumber) {
+    throw new Error('La cuenta destino debe ser diferente a la cuenta origen')
+  }
+
+  const rawAmount = transferData.amount
+  const amount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount))
+  
+  if (isNaN(amount)) {
+    throw new Error('El monto debe ser un número válido')
+  }
+  
+  if (amount <= 0) {
+    throw new Error('El monto debe ser mayor a 0')
+  }
+
+  const descriptionParts = [transferData.reference, transferData.concept].filter(
+    (x) => x != null && String(x).trim() !== ''
+  )
+  const description = descriptionParts.length ? descriptionParts.join(' — ') : undefined
+
+  const body = {
+    sourceAccountNumber,
+    destinationAccountNumber,
+    amount,
+    currency: transferData.currency ?? 'GTQ',
+  }
+  if (description) body.description = description
+  
   return body
 }
 
@@ -57,11 +126,14 @@ export const transactionService = {
         },
       })
       const payload = response.data
+      const transactions = payload.transactions ?? payload.data ?? []
+      const total = payload.pagination?.total ?? payload.total ?? transactions.length ?? 0
+      
       return {
         success: true,
         data: {
-          transactions: payload.transactions ?? [],
-          total: payload.pagination?.total ?? payload.transactions?.length ?? 0,
+          transactions: Array.isArray(transactions) ? transactions : [],
+          total: total,
           summary: payload.summary,
           pagination: payload.pagination,
         },
@@ -104,11 +176,14 @@ export const transactionService = {
         },
       })
       const payload = response.data
+      const transactions = payload.transactions ?? payload.data ?? []
+      const total = payload.pagination?.total ?? payload.total ?? transactions.length ?? 0
+      
       return {
         success: true,
         data: {
-          transactions: payload.transactions ?? [],
-          total: payload.pagination?.total ?? payload.transactions?.length ?? 0,
+          transactions: Array.isArray(transactions) ? transactions : [],
+          total: total,
           pagination: payload.pagination,
         },
       }
@@ -127,12 +202,14 @@ export const transactionService = {
         params: { limit: filters.limit || 50, offset: filters.offset || 0, ...filters },
       })
       const payload = response.data
-      const history = payload.history ?? []
+      const history = payload.history ?? payload.transactions ?? payload.data ?? []
+      const total = payload.total_records ?? payload.total ?? payload.pagination?.total ?? history.length
+      
       return {
         success: true,
         data: {
-          transactions: history,
-          total: payload.total_records ?? history.length,
+          transactions: Array.isArray(history) ? history : [],
+          total: total,
         },
       }
     } catch (error) {
@@ -150,12 +227,14 @@ export const transactionService = {
         params: { limit: filters.limit || 50, offset: filters.offset || 0, ...filters },
       })
       const payload = response.data
-      const history = payload.history ?? []
+      const history = payload.history ?? payload.transactions ?? payload.data ?? []
+      const total = payload.total_records ?? payload.total ?? payload.pagination?.total ?? history.length
+      
       return {
         success: true,
         data: {
-          transactions: history,
-          total: payload.total_records ?? history.length,
+          transactions: Array.isArray(history) ? history : [],
+          total: total,
         },
       }
     } catch (error) {
@@ -175,7 +254,37 @@ export const transactionService = {
       return { success: true, data: response.data }
     } catch (error) {
       console.error('Error creating deposit:', error)
+      
+      // Validar si es un error de validación de mapDepositBody
+      if (error.message && error.message.includes('requerido')) {
+        const msg = error.message
+        toast.error(msg)
+        return { success: false, error: msg }
+      }
+      
       const msg = resolveBankingError(error, 'Error al crear depósito')
+      toast.error(msg)
+      return { success: false, error: msg }
+    }
+  },
+
+  createTransfer: async (transferData) => {
+    try {
+      const body = mapTransferBody(transferData)
+      const response = await bankingClient.post('/transactions/transfer', body)
+      toast.success('Transferencia realizada exitosamente')
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Error creating transfer:', error)
+      
+      // Validar si es un error de validación de mapTransferBody
+      if (error.message && (error.message.includes('requerido') || error.message.includes('diferente'))) {
+        const msg = error.message
+        toast.error(msg)
+        return { success: false, error: msg }
+      }
+      
+      const msg = resolveBankingError(error, 'Error al realizar transferencia')
       toast.error(msg)
       return { success: false, error: msg }
     }

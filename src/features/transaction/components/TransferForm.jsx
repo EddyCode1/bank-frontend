@@ -2,25 +2,42 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import useTransactionStore from '../store/useTransactionStore'
 
-export default function DepositForm() {
+export default function TransferForm() {
   const [formData, setFormData] = useState({
-    accountId: '',
+    sourceAccountId: '',
+    destinationAccountId: '',
     amount: '',
     reference: '',
     concept: ''
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { createDeposit } = useTransactionStore()
+  const { createTransfer } = useTransactionStore()
 
   const validateForm = () => {
     const newErrors = {}
 
-    // Validar accountId
-    if (!formData.accountId || formData.accountId.trim() === '') {
-      newErrors.accountId = 'El número de cuenta es requerido'
-    } else if (!/^[a-zA-Z0-9-]{3,}$/.test(formData.accountId.trim())) {
-      newErrors.accountId = 'Formato de cuenta inválido'
+    // Validar cuenta origen
+    if (!formData.sourceAccountId || formData.sourceAccountId.trim() === '') {
+      newErrors.sourceAccountId = 'La cuenta origen es requerida'
+    } else if (!/^[a-zA-Z0-9-]{3,}$/.test(formData.sourceAccountId.trim())) {
+      newErrors.sourceAccountId = 'Formato de cuenta origen inválido'
+    }
+
+    // Validar cuenta destino
+    if (!formData.destinationAccountId || formData.destinationAccountId.trim() === '') {
+      newErrors.destinationAccountId = 'La cuenta destino es requerida'
+    } else if (!/^[a-zA-Z0-9-]{3,}$/.test(formData.destinationAccountId.trim())) {
+      newErrors.destinationAccountId = 'Formato de cuenta destino inválido'
+    }
+
+    // Validar que las cuentas sean diferentes
+    if (
+      formData.sourceAccountId.trim() &&
+      formData.destinationAccountId.trim() &&
+      formData.sourceAccountId.trim() === formData.destinationAccountId.trim()
+    ) {
+      newErrors.destinationAccountId = 'La cuenta destino debe ser diferente a la cuenta origen'
     }
 
     // Validar amount
@@ -78,8 +95,9 @@ export default function DepositForm() {
 
     setIsSubmitting(true)
     try {
-      const result = await createDeposit({
-        accountId: formData.accountId.trim(),
+      const result = await createTransfer({
+        sourceAccountId: formData.sourceAccountId.trim(),
+        destinationAccountId: formData.destinationAccountId.trim(),
         amount: parseFloat(formData.amount),
         reference: formData.reference.trim() || undefined,
         concept: formData.concept.trim() || undefined
@@ -87,7 +105,8 @@ export default function DepositForm() {
 
       if (result.success) {
         setFormData({
-          accountId: '',
+          sourceAccountId: '',
+          destinationAccountId: '',
           amount: '',
           reference: '',
           concept: ''
@@ -96,7 +115,7 @@ export default function DepositForm() {
       }
     } catch (error) {
       console.error('Error submitting form:', error)
-      toast.error('Error inesperado al procesar el depósito')
+      toast.error('Error inesperado al procesar la transferencia')
     } finally {
       setIsSubmitting(false)
     }
@@ -104,27 +123,49 @@ export default function DepositForm() {
 
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Crear Depósito</h2>
+      <h2 className="text-xl font-semibold mb-4">Crear Transferencia</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Account ID Field */}
+        {/* Source Account Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Número de cuenta *
+            Cuenta Origen *
           </label>
           <input
             type="text"
-            name="accountId"
-            value={formData.accountId}
+            name="sourceAccountId"
+            value={formData.sourceAccountId}
             onChange={handleChange}
-            placeholder="Ej: número de cuenta en el banco"
+            placeholder="Ej: tu número de cuenta"
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-              errors.accountId
+              errors.sourceAccountId
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 focus:ring-blue-500'
             }`}
           />
-          {errors.accountId && (
-            <p className="mt-1 text-sm text-red-600">{errors.accountId}</p>
+          {errors.sourceAccountId && (
+            <p className="mt-1 text-sm text-red-600">{errors.sourceAccountId}</p>
+          )}
+        </div>
+
+        {/* Destination Account Field */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cuenta Destino *
+          </label>
+          <input
+            type="text"
+            name="destinationAccountId"
+            value={formData.destinationAccountId}
+            onChange={handleChange}
+            placeholder="Ej: número de cuenta del beneficiario"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+              errors.destinationAccountId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
+          />
+          {errors.destinationAccountId && (
+            <p className="mt-1 text-sm text-red-600">{errors.destinationAccountId}</p>
           )}
         </div>
 
@@ -161,7 +202,7 @@ export default function DepositForm() {
             name="reference"
             value={formData.reference}
             onChange={handleChange}
-            placeholder="Ej: Transferencia bancaria"
+            placeholder="Ej: Pago de servicios"
             maxLength="100"
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
               errors.reference
@@ -184,7 +225,7 @@ export default function DepositForm() {
             name="concept"
             value={formData.concept}
             onChange={handleChange}
-            placeholder="Descripción del depósito"
+            placeholder="Descripción de la transferencia"
             rows="3"
             maxLength="500"
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
@@ -203,9 +244,9 @@ export default function DepositForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
+          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
         >
-          {isSubmitting ? 'Procesando...' : 'Crear Depósito'}
+          {isSubmitting ? 'Procesando...' : 'Realizar Transferencia'}
         </button>
       </form>
     </div>
