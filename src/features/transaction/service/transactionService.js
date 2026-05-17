@@ -24,7 +24,7 @@ function offsetToPage(offset, limit) {
 }
 
 /**
- * Contrato createDeposit del servidor Node: accountNumber, amount, currency opcional, description opcional.
+ * Contrato createDeposit del servidor Node: accountNumber, amount, currency (GTQ|USD), description opcional.
  * Valida y mapea correctamente los datos del depósito
  */
 function mapDepositBody(depositData) {

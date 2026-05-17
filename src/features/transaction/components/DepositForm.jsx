@@ -6,6 +6,7 @@ export default function DepositForm() {
   const [formData, setFormData] = useState({
     accountId: '',
     amount: '',
+    currency: 'GTQ',
     reference: '',
     concept: ''
   })
@@ -37,6 +38,10 @@ export default function DepositForm() {
       } else if (!/^\d+(\.\d{1,2})?$/.test(formData.amount)) {
         newErrors.amount = 'El monto debe tener máximo 2 decimales'
       }
+    }
+
+    if (!formData.currency || !['GTQ', 'USD'].includes(formData.currency)) {
+      newErrors.currency = 'Selecciona una moneda válida (GTQ o USD)'
     }
 
     // Validar referencia (opcional pero si se proporciona debe ser válida)
@@ -81,6 +86,7 @@ export default function DepositForm() {
       const result = await createDeposit({
         accountId: formData.accountId.trim(),
         amount: parseFloat(formData.amount),
+        currency: formData.currency,
         reference: formData.reference.trim() || undefined,
         concept: formData.concept.trim() || undefined
       })
@@ -89,6 +95,7 @@ export default function DepositForm() {
         setFormData({
           accountId: '',
           amount: '',
+          currency: 'GTQ',
           reference: '',
           concept: ''
         })
@@ -128,10 +135,33 @@ export default function DepositForm() {
           )}
         </div>
 
+        {/* Currency Field */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Moneda *
+          </label>
+          <select
+            name="currency"
+            value={formData.currency}
+            onChange={handleChange}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+              errors.currency
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
+          >
+            <option value="GTQ">GTQ — Quetzales</option>
+            <option value="USD">USD — Dólares</option>
+          </select>
+          {errors.currency && (
+            <p className="mt-1 text-sm text-red-600">{errors.currency}</p>
+          )}
+        </div>
+
         {/* Amount Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Monto (GTQ) *
+            Monto ({formData.currency}) *
           </label>
           <input
             type="text"
