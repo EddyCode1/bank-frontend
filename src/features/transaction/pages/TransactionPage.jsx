@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import useTransactionStore from '../store/useTransactionStore'
 import useAuthStore from '../../auth/store/useAuthStore'
 import TransactionTable from '../components/TransactionTable'
@@ -13,6 +13,7 @@ export default function TransactionPage() {
   const [activeTab, setActiveTab] = useState('my-transactions') // 'my-transactions', 'history', 'deposit', 'transfer'
   const [lastListTab, setLastListTab] = useState('my-transactions')
   const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [transferDestination, setTransferDestination] = useState('')
   const [filters, setFilters] = useState({
     limit: 20,
     offset: 0,
@@ -23,6 +24,7 @@ export default function TransactionPage() {
     transactionId: '',
     accountId: ''
   })
+  const [searchParams] = useSearchParams()
   const [filterDraft, setFilterDraft] = useState({
     type: '',
     user_id: '',
@@ -34,6 +36,20 @@ export default function TransactionPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const isAdmin = isAdminUser(user)
+
+  useEffect(() => {
+    const targetTab = searchParams.get('tab')
+    const destination = searchParams.get('dest')?.trim()
+    const timer = setTimeout(() => {
+      if (targetTab === 'transfer') {
+        setActiveTab('transfer')
+      }
+      if (destination) {
+        setTransferDestination(destination)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [searchParams])
 
   const {
     transactions,
@@ -394,7 +410,12 @@ export default function TransactionPage() {
         {activeTab === 'deposit' && <DepositForm onSuccess={handleOperationSuccess} />}
 
         {/* Transfer Tab */}
-        {activeTab === 'transfer' && <TransferForm onSuccess={handleOperationSuccess} />}
+        {activeTab === 'transfer' && (
+          <TransferForm
+            onSuccess={handleOperationSuccess}
+            initialDestinationAccountId={transferDestination}
+          />
+        )}
 
         {/* Admin Deposits Tab */}
         {activeTab === 'admin-deposits' && isAdmin && <AdminDepositsPanel />}

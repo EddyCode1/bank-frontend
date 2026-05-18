@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import useTransactionStore from '../store/useTransactionStore'
 
-export default function TransferForm({ onSuccess }) {
+export default function TransferForm({ onSuccess, initialDestinationAccountId = '' }) {
   const [formData, setFormData] = useState({
     sourceAccountId: '',
     destinationAccountId: '',
@@ -13,6 +13,18 @@ export default function TransferForm({ onSuccess }) {
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { createTransfer } = useTransactionStore()
+
+  useEffect(() => {
+    const trimmed = initialDestinationAccountId?.trim()
+    if (!trimmed) return undefined
+    const timer = setTimeout(() => {
+      setFormData((prev) => ({
+        ...prev,
+        destinationAccountId: trimmed
+      }))
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [initialDestinationAccountId])
 
   const validateForm = () => {
     const newErrors = {}

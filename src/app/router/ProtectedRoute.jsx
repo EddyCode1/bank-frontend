@@ -8,7 +8,6 @@ import { getUserRole, isAdminRole } from '../../shared/auth/roles'
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { user, token, isAuthenticated } = useAuthStore()
   const location = useLocation()
-
   // Si no está autenticado, redirigir a login
   if (!isAuthenticated || !token) {
     return <Navigate to="/login" replace />
