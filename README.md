@@ -112,6 +112,11 @@ frontend/
 
 Ver `docker-compose.yml` en el repositorio principal.
 
+## ✅ Testing funcional
+
+- `TESTING_AUTH.md`: matriz de pruebas de autenticación/autorización.
+- `TESTING_USUARIOS.md`: pruebas del módulo de usuarios/admin.
+
 ## 📝 Licencia
 
 ISC

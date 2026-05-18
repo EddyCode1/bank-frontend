@@ -47,7 +47,7 @@ const LoginPage = () => {
           <input
             type="text"
             placeholder="tu@email.com o usuario"
-            {...register('email', { required: 'Email requerido' })}
+            {...register('email', { required: 'Correo o usuario requerido' })}
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
           />
           {errors.email && (

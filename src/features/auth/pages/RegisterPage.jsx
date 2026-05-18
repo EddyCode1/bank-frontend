@@ -30,7 +30,7 @@ const RegisterPage = () => {
       })
 
       if (res.success) {
-        toast.success('Cuenta creada exitosamente')
+        toast.success('Cuenta creada. Revisa tu correo para verificar y espera activación administrativa.')
         navigate('/login')
       }
     } catch (err) {
@@ -144,12 +144,17 @@ const RegisterPage = () => {
         </button>
       </form>
 
-      <p className="mt-5 text-center text-sm text-[var(--muted)]">
-        ¿Ya tienes cuenta?{' '}
-        <Link to="/login" className="font-semibold text-[var(--primary)] transition hover:underline">
-          Inicia sesión
+      <div className="mt-5 flex items-center justify-between text-sm">
+        <Link to="/resend-verification" className="font-semibold text-[var(--primary)] transition hover:underline">
+          Reenviar verificación
         </Link>
-      </p>
+        <p className="text-[var(--muted)]">
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" className="font-semibold text-[var(--primary)] transition hover:underline">
+            Inicia sesión
+          </Link>
+        </p>
+      </div>
     </section>
   )
 }
