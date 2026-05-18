@@ -27,7 +27,8 @@ const quickLinksBase = [
   { id: 2, label: 'Favoritos',      path: '/loby/favorites',     icon: '★', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
   { id: 3, label: 'Productos',      path: '/loby/products',      icon: '◫', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
   { id: 4, label: 'Servicios',      path: '/loby/services',      icon: '◌', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
-  { id: 5, label: 'Transacciones',  path: '/loby/transactions',  icon: '⇄', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 5, label: 'Horarios',       path: '/loby/schedules',     icon: '🕐', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 6, label: 'Transacciones',  path: '/loby/transactions',  icon: '⇄', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
 ];
 
 const promoSlides = [
