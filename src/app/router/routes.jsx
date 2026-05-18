@@ -20,6 +20,7 @@ import { FavoritePage } from '../../features/favorite'
 import { ProductPage } from '../../features/product'
 import { ServicePage } from '../../features/service'
 import { SchedulePage } from '../../features/schedule'
+import { FinancialPage } from '../../features/financial'
 import { TransactionPage } from '../../features/transaction'
 import { UsersPage, UserDetailPage } from '../../features/user'
 import ProtectedRoute from './ProtectedRoute'
@@ -114,6 +115,10 @@ const router = createBrowserRouter([
       {
         path: 'services',
         element: <ServicePage />,
+      },
+      {
+        path: 'saldos',
+        element: <FinancialPage />,
       },
       {
         path: 'schedules',

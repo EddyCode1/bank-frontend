@@ -1,0 +1,1 @@
+// Store del módulo financiero
