@@ -7,6 +7,7 @@ function buildInitialFormData(product) {
       description: '',
       type: 'PRODUCTO',
       price: '',
+      is_active: true,
     }
   }
   return {
@@ -14,6 +15,7 @@ function buildInitialFormData(product) {
     description: product.description || '',
     type: product.type,
     price: product.price,
+    is_active: product.is_active !== false,
   }
 }
 
@@ -71,12 +73,16 @@ export default function ProductForm({ product, onSubmit, onClose }) {
 
     setIsSubmitting(true)
     try {
-      await onSubmit({
+      const payload = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         type: formData.type,
         price: parseFloat(formData.price),
-      })
+      }
+      if (product) {
+        payload.is_active = Boolean(formData.is_active)
+      }
+      await onSubmit(payload)
     } finally {
       setIsSubmitting(false)
     }
@@ -195,6 +201,34 @@ export default function ProductForm({ product, onSubmit, onClose }) {
             {formData.description.length}/500
           </p>
         </div>
+
+        {product ? (
+          <div className="flex items-center justify-between rounded-xl border px-4 py-3" style={{ borderColor: '#E2E8F0', backgroundColor: '#F8FAFC' }}>
+            <div>
+              <p className="text-sm font-bold" style={{ color: '#1E293B' }}>Disponibilidad</p>
+              <p className="text-xs" style={{ color: '#64748B' }}>
+                Si desactivas el producto, dejará de mostrarse en el catálogo para clientes y no podrá solicitarse.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_active"
+                checked={Boolean(formData.is_active)}
+                onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <span
+                className="h-6 w-11 rounded-full transition-colors"
+                style={{ backgroundColor: formData.is_active ? '#1FA187' : '#CBD5E1' }}
+              />
+              <span
+                className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform"
+                style={{ transform: formData.is_active ? 'translateX(20px)' : 'translateX(0)' }}
+              />
+            </label>
+          </div>
+        ) : null}
 
         {/* BOTONES DE ACCIÓN */}
         <div className="flex gap-4 pt-6 border-t" style={{ borderColor: '#F1F5F9' }}>

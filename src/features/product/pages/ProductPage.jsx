@@ -84,6 +84,19 @@ export default function ProductPage() {
     setEditingProduct(null)
   }
 
+  const handleDelete = async (productId) => {
+    const target = products.find((p) => p._id === productId)
+    const name = target?.name || 'este producto'
+    const confirmed = window.confirm(
+      `¿Eliminar definitivamente "${name}"? Si solo necesitas dejar de ofrecerlo, edítalo y desactívalo.`
+    )
+    if (!confirmed) return
+    const ok = await deleteProduct(productId)
+    if (ok) {
+      toast.success('Producto eliminado correctamente')
+    }
+  }
+
   const handleOpenRequestModal = (product) => {
     setRequestingProduct(product)
     setRequestNotes('')
@@ -214,7 +227,7 @@ export default function ProductPage() {
             products={products}
             isAdmin={isAdmin}
             onEdit={handleEdit}
-            onDelete={deleteProduct}
+            onDelete={handleDelete}
             onRequest={!isAdmin ? handleOpenRequestModal : undefined}
             requestingId={requestingId}
           />
@@ -265,7 +278,9 @@ export default function ProductPage() {
                           {item.product_id?.name || 'Producto'}
                         </td>
                         <td className="py-3 pr-4" style={{ color: '#475569' }}>
-                          {item.user_id}
+                          <span className="font-mono text-xs px-2 py-0.5 rounded bg-gray-50">
+                            {String(item.user_id || '').slice(-8).toUpperCase() || '—'}
+                          </span>
                         </td>
                         <td className="py-3 pr-4">
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: badge.bg, color: badge.color }}>

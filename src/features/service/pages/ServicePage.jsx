@@ -489,7 +489,11 @@ export default function ServicePage() {
                       <td className="py-3 pr-4 font-semibold" style={{ color: '#1F2A44' }}>
                         {payment.service_id?.name || 'Servicio'}
                       </td>
-                      <td className="py-3 pr-4" style={{ color: '#475569' }}>{payment.user_id}</td>
+                      <td className="py-3 pr-4" style={{ color: '#475569' }}>
+                        <span className="font-mono text-xs px-2 py-0.5 rounded bg-gray-50">
+                          {String(payment.user_id || '').slice(-8).toUpperCase() || '—'}
+                        </span>
+                      </td>
                       <td className="py-3 pr-4" style={{ color: '#475569' }}>
                         {payment.account_id?.account_number || '—'}
                       </td>
