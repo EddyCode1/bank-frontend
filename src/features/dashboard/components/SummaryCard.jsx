@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function SummaryCard({ title, value, icon, loading, error, empty, accent = '#5B5CF6', onClick, tooltip }) {
   return (
     <div

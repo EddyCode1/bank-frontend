@@ -30,7 +30,7 @@ export default function TransactionTable({
         hour: '2-digit',
         minute: '2-digit'
       })
-    } catch (e) {
+    } catch {
       return 'Fecha inválida'
     }
   }

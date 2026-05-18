@@ -45,17 +45,20 @@ export default function AccountFormModal({
 
   useEffect(() => {
     if (!isOpen) return
-    setErrors({})
-    setFormData({
-      accountNumber: account?.accountNumber || generateAccountNumber(),
-      type: account?.type || 'CORRIENTE',
-      currency: account?.currency || 'GTQ',
-      status: account?.status || 'active',
-      balance: account?.balance ?? 0,
-      dailyLimit: account?.dailyLimit ?? 0,
-      monthlyLimit: account?.monthlyLimit ?? 0,
-      ownerId: account?.ownerId || '',
-    })
+    const timer = window.setTimeout(() => {
+      setErrors({})
+      setFormData({
+        accountNumber: account?.accountNumber || generateAccountNumber(),
+        type: account?.type || 'CORRIENTE',
+        currency: account?.currency || 'GTQ',
+        status: account?.status || 'active',
+        balance: account?.balance ?? 0,
+        dailyLimit: account?.dailyLimit ?? 0,
+        monthlyLimit: account?.monthlyLimit ?? 0,
+        ownerId: account?.ownerId || '',
+      })
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [account, isOpen])
 
   const handleChange = (e) => {

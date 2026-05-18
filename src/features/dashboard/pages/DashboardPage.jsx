@@ -7,7 +7,7 @@ import { transactionService } from '../../transaction/service/transactionService
 import useAuthStore from '../../auth/store/useAuthStore';
 import SummaryCard from '../components/SummaryCard';
 import QuickLinks from '../components/QuickLinks';
-import { EmptyState, ErrorState } from '../components/States';
+import { getFavorites } from '../hooks/useFavorites';
 
 // Ilustraciones
 import bannerCreditos from '../../../assets/banner-creditos.png';
@@ -170,25 +170,41 @@ export default function DashboardPage() {
 
   // Cargar datos de resumen (cuentas, saldo, transacciones, favoritos)
   useEffect(() => {
-    setSummaryLoading(true);
-    setSummaryError('');
-    Promise.all([
-      accountService.getMyInfo(),
-      transactionService.getMyTransactions({ limit: 1 }),
-      // Aquí podrías agregar favoritos reales si existe API
-    ])
-      .then(([accountInfo, txInfo]) => {
-        setSummary({
-          accounts: accountInfo?.data?.summary?.totalAccounts ?? 0,
-          balance: accountInfo?.data?.summary?.totalBalance ?? 0,
-          transactions: txInfo?.data?.total ?? 0,
-          favorites: 0, // TODO: integrar favoritos reales si hay API
-        });
-      })
-      .catch((err) => {
-        setSummaryError('No se pudo cargar el resumen.');
-      })
-      .finally(() => setSummaryLoading(false));
+    const timer = window.setTimeout(() => {
+      setSummaryLoading(true);
+      setSummaryError('');
+      Promise.all([
+        accountService.getMyInfo(),
+        transactionService.getMyTransactions({ limit: 1 }),
+        // Aquí podrías agregar favoritos reales si existe API
+      ])
+        .then(([accountInfo, txInfo]) => {
+          setSummary({
+            accounts: accountInfo?.data?.summary?.totalAccounts ?? 0,
+            balance: accountInfo?.data?.summary?.totalBalance ?? 0,
+            transactions: txInfo?.data?.total ?? 0,
+            favorites: getFavorites().length,
+          });
+        })
+        .catch((_err) => {
+          setSummaryError('No se pudo cargar el resumen.');
+        })
+        .finally(() => setSummaryLoading(false));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  // Sincroniza contador de favoritos cuando cambia en dashboard/favoritos.
+  useEffect(() => {
+    const syncFavoritesSummary = () => {
+      setSummary((prev) => ({ ...prev, favorites: getFavorites().length }));
+    };
+    window.addEventListener('favorites:updated', syncFavoritesSummary);
+    window.addEventListener('storage', syncFavoritesSummary);
+    return () => {
+      window.removeEventListener('favorites:updated', syncFavoritesSummary);
+      window.removeEventListener('storage', syncFavoritesSummary);
+    };
   }, []);
 
   // Tasas de referencia desde el backend
@@ -208,7 +224,7 @@ export default function DashboardPage() {
           eurRate: Number(eurData?.convertedAmount ?? eurData?.data?.rate ?? 0),
           updatedAt: new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }),
         });
-      } catch (error) {
+      } catch {
         setReferenceError('No fue posible cargar las tasas del backend.');
       } finally {
         setLoadingReferenceRates(false);
@@ -219,8 +235,13 @@ export default function DashboardPage() {
 
   // Convertidor con debounce de 350 ms
   useEffect(() => {
-    if (!amount || Number(amount) <= 0) { setConversionResult(null); return; }
     const timeout = window.setTimeout(async () => {
+      if (!amount || Number(amount) <= 0) {
+        setConversionResult(null);
+        setExchangeError('');
+        setLoadingConversion(false);
+        return;
+      }
       setLoadingConversion(true);
       setExchangeError('');
       try {

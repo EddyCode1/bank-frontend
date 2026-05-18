@@ -8,7 +8,10 @@ const ProfileButton = ({ imageUrl, email, onEditProfile, onLogout, onChangePhoto
   const ref = useRef()
 
   useEffect(() => {
-    setAvatarSrc(imageUrl?.trim() ? imageUrl : defaultProfile)
+    const timer = window.setTimeout(() => {
+      setAvatarSrc(imageUrl?.trim() ? imageUrl : defaultProfile)
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [imageUrl])
 
   useEffect(() => {

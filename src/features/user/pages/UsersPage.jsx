@@ -47,7 +47,7 @@ export default function UsersPage() {
             } else {
                 showNotification(result.error || 'Error al cargar usuarios', 'error')
             }
-        } catch (error) {
+        } catch {
             showNotification('Error al cargar usuarios', 'error')
         } finally {
             setLoading(false)
@@ -55,7 +55,10 @@ export default function UsersPage() {
     }
 
     useEffect(() => {
-        loadUsers(1)
+        const timer = window.setTimeout(() => {
+            loadUsers(1)
+        }, 0)
+        return () => window.clearTimeout(timer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 

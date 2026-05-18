@@ -7,6 +7,7 @@ import { authService } from '../../auth/service/authService';
 import defaultProfile from '../../../assets/default-profile.png';
 import { resizeImageToDataUrl } from '../../../shared/utils/resizeProfileImage';
 import { useForm } from 'react-hook-form';
+import { publicClient } from '../../../shared/api/adminClient';
 
 /**
  * Perfil del usuario: datos de sesión y foto persistida en este dispositivo (localStorage).
@@ -28,7 +29,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setPhotoSrc(user?.profilePicture?.trim() ? user.profilePicture : defaultProfile);
+    const timer = window.setTimeout(() => {
+      setPhotoSrc(user?.profilePicture?.trim() ? user.profilePicture : defaultProfile);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [user?.profilePicture]);
 
   // Formulario react-hook-form
@@ -38,6 +42,9 @@ export default function ProfilePage() {
       username: user?.username || '',
       email: user?.email || '',
       telefono: user?.telefono || '',
+      direccion: user?.direccion || '',
+      trabajo: user?.trabajo || '',
+      ingresoMensual: user?.ingresoMensual ?? '',
     },
     mode: 'onBlur',
   });
@@ -49,6 +56,9 @@ export default function ProfilePage() {
       username: user?.username || '',
       email: user?.email || '',
       telefono: user?.telefono || '',
+      direccion: user?.direccion || '',
+      trabajo: user?.trabajo || '',
+      ingresoMensual: user?.ingresoMensual ?? '',
     });
   }, [user, reset]);
 
@@ -92,23 +102,44 @@ export default function ProfilePage() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // PUT /profile o /users/me según backend
-      const response = await authClient.put('/profile', {
-        nombre: data.nombre,
-        username: data.username,
-        email: data.email,
-        telefono: data.telefono,
-      });
-      if (response.data) {
+      // UserProfileController: PUT /api/v1/users/me
+      // UpdateProfileDto permite Name, Surname, Phone, Address, WorkName, MonthlyIncome.
+      const nameParts = String(data.nombre || '').trim().split(/\s+/)
+      const payload = {
+        name: nameParts[0] || undefined,
+        surname: nameParts.slice(1).join(' ') || undefined,
+        phone: data.telefono || undefined,
+        address: String(data.direccion || '').trim() || undefined,
+        workName: String(data.trabajo || '').trim() || undefined,
+        monthlyIncome:
+          data.ingresoMensual !== '' && data.ingresoMensual != null
+            ? Number(data.ingresoMensual)
+            : undefined,
+      }
+      const response = await publicClient.put('/users/me', payload);
+      if (!response.data?.success) {
+        toast.error(response.data?.message || 'No se pudo actualizar el perfil');
+        return
+      }
+
+      const refreshedProfile = await authService.getCurrentUser()
+      if (refreshedProfile.success && refreshedProfile.user) {
+        patchUser(refreshedProfile.user)
+      } else {
         patchUser({
           ...user,
-          ...data,
-        });
-        toast.success('Perfil actualizado correctamente');
-        setEditMode(false);
-      } else {
-        toast.error('No se pudo actualizar el perfil');
+          nombre: data.nombre,
+          telefono: data.telefono,
+          direccion: data.direccion,
+          trabajo: data.trabajo,
+          ingresoMensual:
+            data.ingresoMensual !== '' && data.ingresoMensual != null
+              ? Number(data.ingresoMensual)
+              : null,
+        })
       }
+      toast.success('Perfil actualizado correctamente');
+      setEditMode(false);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Error al actualizar perfil';
       toast.error(msg);
@@ -180,27 +211,21 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-[var(--muted)]">Usuario</label>
                 <input
                   type="text"
-                  {...register('username', { required: 'El usuario es obligatorio' })}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm ${errors.username ? 'border-red-500' : 'border-[var(--border)]'} focus:border-[var(--primary)]`}
-                  disabled={loading}
+                  value={user?.username || ''}
+                  readOnly
+                  className="w-full cursor-not-allowed rounded-lg border border-[var(--border)] bg-[var(--gris-claro-fondo)] px-3 py-2 text-sm text-[var(--muted)]"
                 />
-                {errors.username && <p className="text-xs text-red-500 mt-1">{errors.username.message}</p>}
+                <p className="mt-1 text-xs text-[var(--muted)]">Este campo no es editable.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--muted)]">Correo</label>
                 <input
                   type="email"
-                  {...register('email', {
-                    required: 'El correo es obligatorio',
-                    pattern: {
-                      value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
-                      message: 'Correo inválido',
-                    },
-                  })}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm ${errors.email ? 'border-red-500' : 'border-[var(--border)]'} focus:border-[var(--primary)]`}
-                  disabled={loading}
+                  value={user?.email || ''}
+                  readOnly
+                  className="w-full cursor-not-allowed rounded-lg border border-[var(--border)] bg-[var(--gris-claro-fondo)] px-3 py-2 text-sm text-[var(--muted)]"
                 />
-                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+                <p className="mt-1 text-xs text-[var(--muted)]">Este campo no es editable.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--muted)]">Teléfono</label>
@@ -216,6 +241,53 @@ export default function ProfilePage() {
                   disabled={loading}
                 />
                 {errors.telefono && <p className="text-xs text-red-500 mt-1">{errors.telefono.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Dirección</label>
+                <input
+                  type="text"
+                  {...register('direccion', {
+                    maxLength: {
+                      value: 180,
+                      message: 'La dirección no puede exceder 180 caracteres',
+                    },
+                  })}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm ${errors.direccion ? 'border-red-500' : 'border-[var(--border)]'} focus:border-[var(--primary)]`}
+                  disabled={loading}
+                />
+                {errors.direccion && <p className="text-xs text-red-500 mt-1">{errors.direccion.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Lugar de trabajo</label>
+                <input
+                  type="text"
+                  {...register('trabajo', {
+                    maxLength: {
+                      value: 120,
+                      message: 'El lugar de trabajo no puede exceder 120 caracteres',
+                    },
+                  })}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm ${errors.trabajo ? 'border-red-500' : 'border-[var(--border)]'} focus:border-[var(--primary)]`}
+                  disabled={loading}
+                />
+                {errors.trabajo && <p className="text-xs text-red-500 mt-1">{errors.trabajo.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Ingreso mensual</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...register('ingresoMensual', {
+                    min: {
+                      value: 0,
+                      message: 'El ingreso mensual no puede ser negativo',
+                    },
+                  })}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm ${errors.ingresoMensual ? 'border-red-500' : 'border-[var(--border)]'} focus:border-[var(--primary)]`}
+                  disabled={loading}
+                />
+                {errors.ingresoMensual && <p className="text-xs text-red-500 mt-1">{errors.ingresoMensual.message}</p>}
               </div>
               <div className="flex gap-3 mt-6">
                 <button
@@ -252,6 +324,26 @@ export default function ProfilePage() {
               <div className="flex flex-col gap-1 border-b border-[var(--border)] pb-4 sm:flex-row sm:justify-between">
                 <dt className="text-sm font-medium text-[var(--muted)]">Teléfono</dt>
                 <dd className="text-sm font-semibold text-[var(--text)]">{user?.telefono || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-1 border-b border-[var(--border)] pb-4 sm:flex-row sm:justify-between">
+                <dt className="text-sm font-medium text-[var(--muted)]">Dirección</dt>
+                <dd className="text-sm font-semibold text-[var(--text)]">{user?.direccion || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-1 border-b border-[var(--border)] pb-4 sm:flex-row sm:justify-between">
+                <dt className="text-sm font-medium text-[var(--muted)]">Lugar de trabajo</dt>
+                <dd className="text-sm font-semibold text-[var(--text)]">{user?.trabajo || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-1 border-b border-[var(--border)] pb-4 sm:flex-row sm:justify-between">
+                <dt className="text-sm font-medium text-[var(--muted)]">Ingreso mensual</dt>
+                <dd className="text-sm font-semibold text-[var(--text)]">
+                  {user?.ingresoMensual != null && user?.ingresoMensual !== ''
+                    ? Number(user.ingresoMensual).toLocaleString('es-GT', {
+                        style: 'currency',
+                        currency: 'GTQ',
+                        maximumFractionDigits: 2,
+                      })
+                    : '—'}
+                </dd>
               </div>
               <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
                 <dt className="text-sm font-medium text-[var(--muted)]">Rol</dt>

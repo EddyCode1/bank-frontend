@@ -15,6 +15,12 @@ function mapUserForStore(userDetails = {}) {
     username: userDetails.username || userDetails.nombre || '',
     email: userDetails.email || '',
     telefono: userDetails.telefono || userDetails.phone || userDetails.contact_phone_number || '',
+    direccion: userDetails.direccion || userDetails.address || '',
+    trabajo: userDetails.trabajo || userDetails.workName || '',
+    ingresoMensual:
+      userDetails.ingresoMensual ??
+      userDetails.monthlyIncome ??
+      null,
     profilePicture: userDetails.profilePicture || null,
     rol: userDetails.role || userDetails.rol || 'USER_ROLE',
   }

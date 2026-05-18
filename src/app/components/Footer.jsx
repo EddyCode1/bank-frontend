@@ -1,5 +1,4 @@
 
-import React from 'react';
 import BrandLogo from '../../app/components/BrandLogo';
 import { FaFacebookF, FaInstagram, FaYoutube, FaWhatsapp, FaXTwitter } from 'react-icons/fa6';
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { transactionService } from '../service/transactionService'
 
-const useTransactionStore = create((set, get) => ({
+const useTransactionStore = create((set) => ({
   // State
   transactions: [],
   history: [],

@@ -1,18 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFavorites } from '../hooks/useFavorites';
 
 export default function QuickLinks({ links, loading }) {
-  const { favorites, isFavorite, toggleFavorite } = useFavorites();
-  const [_, setRerender] = useState(0);
-
-  // Escuchar cambios globales de favoritos
-  useEffect(() => {
-    const handler = () => setRerender((v) => v + 1);
-    window.addEventListener('favorites:updated', handler);
-    return () => window.removeEventListener('favorites:updated', handler);
-  }, []);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (loading) {
     return (

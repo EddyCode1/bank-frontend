@@ -54,7 +54,6 @@ export default function AccountPage() {
   const [adminLoading, setAdminLoading] = useState(false)
 
   const [owners, setOwners] = useState([])
-  const [ownersLoading, setOwnersLoading] = useState(false)
 
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -69,10 +68,6 @@ export default function AccountPage() {
 
   const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'mine')
 
-  useEffect(() => {
-    setActiveTab(isAdmin ? 'admin' : 'mine')
-  }, [isAdmin])
-
   const loadMyAccounts = async () => {
     setMyLoading(true)
     try {
@@ -82,7 +77,7 @@ export default function AccountPage() {
       } else {
         toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al consultar mis cuentas')
     } finally {
       setMyLoading(false)
@@ -98,7 +93,7 @@ export default function AccountPage() {
       } else {
         toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar mi información')
     } finally {
       setMyInfoLoading(false)
@@ -123,7 +118,7 @@ export default function AccountPage() {
       } else {
         toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar cuentas admin')
     } finally {
       setAdminLoading(false)
@@ -131,19 +126,24 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
-    loadMyAccounts()
-    loadMyInfo()
+    const timer = window.setTimeout(() => {
+      loadMyAccounts()
+      loadMyInfo()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    if (isAdmin) {
-      loadAdminAccounts()
-    }
+    const timer = window.setTimeout(() => {
+      if (isAdmin) {
+        loadAdminAccounts()
+      }
+    }, 0)
+    return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, adminPage, adminSearch, adminType, adminCurrency, adminStatus])
 
   const fetchOwners = async () => {
-    setOwnersLoading(true)
     try {
       const result = await getUsers({ page: 1, limit: 200 })
       if (result.success) {
@@ -151,10 +151,8 @@ export default function AccountPage() {
       } else {
         toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar los clientes propietarios')
-    } finally {
-      setOwnersLoading(false)
     }
   }
 
@@ -183,7 +181,7 @@ export default function AccountPage() {
       } else {
         setFormError(result.error)
       }
-    } catch (error) {
+    } catch {
       setFormError('Error inesperado al guardar la cuenta')
     } finally {
       setFormLoading(false)
@@ -201,7 +199,7 @@ export default function AccountPage() {
       } else {
         setDetailError(result.error)
       }
-    } catch (error) {
+    } catch {
       setDetailError('Error al obtener movimientos')
     } finally {
       setDetailLoading(false)
@@ -232,7 +230,7 @@ export default function AccountPage() {
       } else {
         toast.error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cambiar estado de la cuenta')
     }
   }

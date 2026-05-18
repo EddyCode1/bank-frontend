@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const FAVORITES_KEY = 'bank_favorites_v1';
 
@@ -14,25 +14,46 @@ export function getFavorites() {
 export function setFavorites(favs) {
   try {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
-  } catch {}
+  } catch {
+    return;
+  }
 }
 
 export function useFavorites() {
-  const favs = getFavorites();
+  const [favorites, setFavoritesState] = useState(() => getFavorites())
+
+  useEffect(() => {
+    const syncFavorites = () => setFavoritesState(getFavorites())
+    window.addEventListener('favorites:updated', syncFavorites)
+    window.addEventListener('storage', syncFavorites)
+    return () => {
+      window.removeEventListener('favorites:updated', syncFavorites)
+      window.removeEventListener('storage', syncFavorites)
+    }
+  }, [])
 
   const isFavorite = useCallback(
-    (id) => favs.includes(id),
-    [favs]
+    (id) => favorites.includes(id),
+    [favorites]
   );
 
   const toggleFavorite = useCallback((id) => {
-    const current = getFavorites();
-    const updated = current.includes(id)
-      ? current.filter((f) => f !== id)
-      : [...current, id];
-    setFavorites(updated);
-    window.dispatchEvent(new Event('favorites:updated'));
-  }, []);
+    setFavoritesState((current) => {
+      const updated = current.includes(id)
+        ? current.filter((f) => f !== id)
+        : [...current, id]
+      setFavorites(updated)
+      window.dispatchEvent(new Event('favorites:updated'))
+      return updated
+    })
+  }, [])
 
-  return { favorites: favs, isFavorite, toggleFavorite };
+  const setFavoritesDirect = useCallback((nextFavorites) => {
+    const normalized = Array.isArray(nextFavorites) ? nextFavorites : []
+    setFavorites(normalized)
+    setFavoritesState(normalized)
+    window.dispatchEvent(new Event('favorites:updated'));
+  }, [])
+
+  return { favorites, isFavorite, toggleFavorite, setFavorites: setFavoritesDirect };
 }

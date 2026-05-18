@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function EmptyState({ message = 'No hay datos para mostrar', icon = '📭', className = '' }) {
   return (
     <div className={`flex flex-col items-center justify-center py-8 text-center text-[var(--muted)] ${className}`}>

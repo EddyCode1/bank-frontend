@@ -1,4 +1,4 @@
-export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
+export default function ProductList({ products, isAdmin, onEdit, onDelete, onRequest, requestingId }) {
   
   // Badge de categoría (Producto/Servicio)
   const getTypeBadge = (type) => {
@@ -70,8 +70,8 @@ export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
             </div>
           </div>
 
-          {/* ACCIONES DE ADMINISTRADOR */}
-          {isAdmin && (
+          {/* ACCIONES */}
+          {isAdmin ? (
             <div className="p-4 flex gap-3" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
               <button
                 onClick={() => onEdit(product)}
@@ -86,6 +86,17 @@ export default function ProductList({ products, isAdmin, onEdit, onDelete }) {
                 style={{ backgroundColor: '#EF4444' }}
               >
                 Eliminar
+              </button>
+            </div>
+          ) : (
+            <div className="p-4" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+              <button
+                onClick={() => onRequest?.(product)}
+                disabled={!onRequest || requestingId === product._id}
+                className="w-full px-3 py-2 rounded-xl transition-all text-sm font-bold text-white active:scale-95 disabled:opacity-60"
+                style={{ backgroundColor: '#2C4A7A' }}
+              >
+                {requestingId === product._id ? 'Enviando solicitud...' : 'Solicitar producto'}
               </button>
             </div>
           )}
