@@ -3,8 +3,10 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 
+
 import ProfileButton from '../../features/account/components/ProfileButton'
 import useAuthStore from '../../features/auth/store/useAuthStore'
+import Footer from '../components/Footer'
 
 /**
  * Layout principal con Sidebar
@@ -27,34 +29,37 @@ const MainLayout = () => {
   }, [location.pathname])
 
   return (
-    <div className="flex h-screen min-h-0 w-full bg-[var(--bg)] overflow-hidden">
-      {/* Sidebar: en desktop ocupa 0 o 18rem; el resto lo llena el main con flex-1 min-w-0 */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+    <div className="flex min-h-screen w-full bg-[var(--bg)] flex-col">
+      <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+        {/* Sidebar: en desktop ocupa 0 o 18rem; el resto lo llena el main con flex-1 min-w-0 */}
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out">
-        <Navbar
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out">
+          <Navbar
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          />
 
-        {/* Página */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto w-full">
-            <Outlet />
-          </div>
-        </main>
+          {/* Página */}
+          <main className="flex-1 overflow-auto p-4 sm:p-6">
+            <div className="max-w-7xl mx-auto w-full">
+              <Outlet />
+            </div>
+          </main>
 
-        <ProfileButton
-          imageUrl={user?.profilePicture}
-          email={user?.email}
-          onEditProfile={() => navigate('/loby/profile')}
-          onLogout={() => {
-            logout()
-            navigate('/login')
-          }}
-          onChangePhoto={() => navigate('/loby/profile?editPhoto=1')}
-        />
+          <ProfileButton
+            imageUrl={user?.profilePicture}
+            email={user?.email}
+            onEditProfile={() => navigate('/loby/profile')}
+            onLogout={() => {
+              logout()
+              navigate('/login')
+            }}
+            onChangePhoto={() => navigate('/loby/profile?editPhoto=1')}
+          />
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }

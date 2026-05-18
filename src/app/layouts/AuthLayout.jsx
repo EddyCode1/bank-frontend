@@ -1,4 +1,6 @@
+
 import BrandLogo from '../components/BrandLogo'
+import Footer from '../components/Footer'
 
 const AuthLayout = ({ children }) => {
   return (
@@ -13,7 +15,9 @@ const AuthLayout = ({ children }) => {
         </div>
         {children}
       </div>
+
     </div>
+    <Footer />
   )
 }
 

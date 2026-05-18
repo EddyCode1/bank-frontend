@@ -1,27 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { bankingClient } from '../../../shared/api/adminClient'
 
-// Ilustraciones en src/assets (reemplazar por arte final cuando existan los PSD/originales)
-import bannerCreditos from '../../../assets/banner-creditos.png'
-import bannerServicios from '../../../assets/banner-servicios.png'
-import cardAhorro from '../../../assets/card-ahorro.png'
-import cardSeguros from '../../../assets/card-seguros.png'
-import cardEducacion from '../../../assets/card-educacion.png'
-import secPassword from '../../../assets/security-password.png'
-import secUrl from '../../../assets/security-url.png'
-import secJwt from '../../../assets/security-jwt.png'
-import secPhishing from '../../../assets/security-phishing.png'
-import secUpdates from '../../../assets/security-updates.png'
-import secMonitoring from '../../../assets/security-monitoring.png'
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { bankingClient } from '../../../shared/api/adminClient';
+import { accountService } from '../../account/service';
+import { transactionService } from '../../transaction/service/transactionService';
+import useAuthStore from '../../auth/store/useAuthStore';
+import SummaryCard from '../components/SummaryCard';
+import QuickLinks from '../components/QuickLinks';
+import { EmptyState, ErrorState } from '../components/States';
 
-const items = [
-  { id: 1, label: 'Cuenta',         path: '/loby/account',       icon: '◉' },
-  { id: 2, label: 'Favoritos',      path: '/loby/favorites',     icon: '★' },
-  { id: 3, label: 'Productos',      path: '/loby/products',      icon: '◫' },
-  { id: 4, label: 'Servicios',      path: '/loby/services',      icon: '◌' },
-  { id: 5, label: 'Transacciones',  path: '/loby/transactions',  icon: '⇄' },
-]
+// Ilustraciones
+import bannerCreditos from '../../../assets/banner-creditos.png';
+import bannerServicios from '../../../assets/banner-servicios.png';
+import cardAhorro from '../../../assets/card-ahorro.png';
+import cardSeguros from '../../../assets/card-seguros.png';
+import cardEducacion from '../../../assets/card-educacion.png';
+import secPassword from '../../../assets/security-password.png';
+import secUrl from '../../../assets/security-url.png';
+import secJwt from '../../../assets/security-jwt.png';
+import secPhishing from '../../../assets/security-phishing.png';
+import secUpdates from '../../../assets/security-updates.png';
+import secMonitoring from '../../../assets/security-monitoring.png';
+
+const quickLinksBase = [
+  { id: 1, label: 'Cuentas',         path: '/loby/account',       icon: '◉', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 2, label: 'Favoritos',      path: '/loby/favorites',     icon: '★', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 3, label: 'Productos',      path: '/loby/products',      icon: '◫', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 4, label: 'Servicios',      path: '/loby/services',      icon: '◌', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+  { id: 5, label: 'Transacciones',  path: '/loby/transactions',  icon: '⇄', roles: ['USER_ROLE', 'ADMIN_ROLE'] },
+];
 
 const promoSlides = [
   {
@@ -33,7 +40,6 @@ const promoSlides = [
     ctaLabel: 'Solicitar ahora',
     ctaPath: '/loby/products',
     image: bannerCreditos,
-    /** Posición focal de la imagen: la persona está a la derecha */
     imagePosition: 'object-[70%_center]',
     overlayFrom: 'from-[#1E3A5F]/85',
   },
@@ -49,7 +55,7 @@ const promoSlides = [
     imagePosition: 'object-[30%_center]',
     overlayFrom: 'from-[#0D3B2E]/85',
   },
-]
+];
 
 const institutionalProducts = [
   {
@@ -59,7 +65,6 @@ const institutionalProducts = [
       'Haz crecer tu dinero con opciones flexibles y rendimiento competitivo para tus metas personales.',
     photo: cardAhorro,
     photoAlt: 'Ilustraciones de ahorro, seguridad y educación financiera',
-    /** Iconos horizontales: mejor contain para no recortar el trío */
     imgClassName: 'object-contain bg-white',
     path: '/loby/account',
     accent: '#5B5CF6',
@@ -84,7 +89,7 @@ const institutionalProducts = [
     path: '/loby/favorites',
     accent: '#A855F7',
   },
-]
+];
 
 const securityTips = [
   {
@@ -131,88 +136,131 @@ const securityTips = [
   },
 ]
 
-const currencyOptions = ['GTQ', 'USD', 'EUR']
+
+const currencyOptions = ['GTQ', 'USD', 'EUR'];
+
 
 export default function DashboardPage() {
-  const [activeSlide, setActiveSlide]               = useState(0)
-  const [referenceRates, setReferenceRates]         = useState(null)
-  const [loadingReferenceRates, setLoadingReferenceRates] = useState(true)
-  const [referenceError, setReferenceError]         = useState('')
-  const [amount, setAmount]                         = useState('100')
-  const [fromCurrency, setFromCurrency]             = useState('GTQ')
-  const [toCurrency, setToCurrency]                 = useState('USD')
-  const [conversionResult, setConversionResult]     = useState(null)
-  const [loadingConversion, setLoadingConversion]   = useState(false)
-  const [exchangeError, setExchangeError]           = useState('')
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [referenceRates, setReferenceRates] = useState(null);
+  const [loadingReferenceRates, setLoadingReferenceRates] = useState(true);
+  const [referenceError, setReferenceError] = useState('');
+  const [amount, setAmount] = useState('100');
+  const [fromCurrency, setFromCurrency] = useState('GTQ');
+  const [toCurrency, setToCurrency] = useState('USD');
+  const [conversionResult, setConversionResult] = useState(null);
+  const [loadingConversion, setLoadingConversion] = useState(false);
+  const [exchangeError, setExchangeError] = useState('');
 
-  /* Auto-rotación del carrusel */
+  // Datos de resumen
+  const [summary, setSummary] = useState({ accounts: null, balance: null, transactions: null, favorites: null });
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState('');
+
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.rol || user?.role || 'USER_ROLE';
+
+  // Auto-rotación del carrusel
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % promoSlides.length)
-    }, 6000)
-    return () => window.clearInterval(interval)
-  }, [])
+      setActiveSlide((prev) => (prev + 1) % promoSlides.length);
+    }, 6000);
+    return () => window.clearInterval(interval);
+  }, []);
 
-  /* Tasas de referencia desde el backend */
+  // Cargar datos de resumen (cuentas, saldo, transacciones, favoritos)
+  useEffect(() => {
+    setSummaryLoading(true);
+    setSummaryError('');
+    Promise.all([
+      accountService.getMyInfo(),
+      transactionService.getMyTransactions({ limit: 1 }),
+      // Aquí podrías agregar favoritos reales si existe API
+    ])
+      .then(([accountInfo, txInfo]) => {
+        setSummary({
+          accounts: accountInfo?.data?.summary?.totalAccounts ?? 0,
+          balance: accountInfo?.data?.summary?.totalBalance ?? 0,
+          transactions: txInfo?.data?.total ?? 0,
+          favorites: 0, // TODO: integrar favoritos reales si hay API
+        });
+      })
+      .catch((err) => {
+        setSummaryError('No se pudo cargar el resumen.');
+      })
+      .finally(() => setSummaryLoading(false));
+  }, []);
+
+  // Tasas de referencia desde el backend
   useEffect(() => {
     async function loadReferenceRates() {
-      setLoadingReferenceRates(true)
-      setReferenceError('')
+      setLoadingReferenceRates(true);
+      setReferenceError('');
       try {
         const [usdRes, eurRes] = await Promise.all([
           bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'USD', amount: 1 } }),
           bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'EUR', amount: 1 } }),
-        ])
-        // API Node: { success, from, to, amount, convertedAmount } (equivale a tasa cuando amount=1)
-        const usdData = usdRes?.data
-        const eurData = eurRes?.data
+        ]);
+        const usdData = usdRes?.data;
+        const eurData = eurRes?.data;
         setReferenceRates({
           usdRate: Number(usdData?.convertedAmount ?? usdData?.data?.rate ?? 0),
           eurRate: Number(eurData?.convertedAmount ?? eurData?.data?.rate ?? 0),
           updatedAt: new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }),
-        })
+        });
       } catch (error) {
-        console.error('Error al cargar tasas:', error)
-        setReferenceError('No fue posible cargar las tasas del backend.')
+        setReferenceError('No fue posible cargar las tasas del backend.');
       } finally {
-        setLoadingReferenceRates(false)
+        setLoadingReferenceRates(false);
       }
     }
-    loadReferenceRates()
-  }, [])
+    loadReferenceRates();
+  }, []);
 
-  /* Convertidor con debounce de 350 ms */
+  // Convertidor con debounce de 350 ms
   useEffect(() => {
-    if (!amount || Number(amount) <= 0) { setConversionResult(null); return }
+    if (!amount || Number(amount) <= 0) { setConversionResult(null); return; }
     const timeout = window.setTimeout(async () => {
-      setLoadingConversion(true)
-      setExchangeError('')
+      setLoadingConversion(true);
+      setExchangeError('');
       try {
         const res = await bankingClient.get('/currency/convert', {
           params: { from: fromCurrency, to: toCurrency, amount: Number(amount) },
-        })
-        const d = res?.data
+        });
+        const d = res?.data;
         if (d?.success && d.convertedAmount != null) {
           setConversionResult({
             amount: d.amount,
             from: d.from,
             to: d.to,
             convertedAmount: d.convertedAmount,
-          })
+          });
         } else {
-          setConversionResult(null)
+          setConversionResult(null);
         }
       } catch {
-        setConversionResult(null)
-        setExchangeError('No se pudo realizar la conversión con el backend.')
+        setConversionResult(null);
+        setExchangeError('No se pudo realizar la conversión con el backend.');
       } finally {
-        setLoadingConversion(false)
+        setLoadingConversion(false);
       }
-    }, 350)
-    return () => window.clearTimeout(timeout)
-  }, [amount, fromCurrency, toCurrency])
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [amount, fromCurrency, toCurrency]);
 
-  const currentSlide = useMemo(() => promoSlides[activeSlide], [activeSlide])
+  const currentSlide = useMemo(() => promoSlides[activeSlide], [activeSlide]);
+
+  // Filtrar accesos rápidos según rol
+  const quickLinks = useMemo(() => quickLinksBase.filter(l => l.roles.includes(userRole)), [userRole]);
+
+  // Formateador de moneda
+  function formatCurrency(amount, currency = 'GTQ') {
+    return Number(amount ?? 0).toLocaleString('es-GT', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2,
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -274,25 +322,55 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Accesos rápidos ───────────────────────────────────────────── */}
+      {/* ── Tarjetas de resumen y accesos rápidos ─────────────────────── */}
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          title="Saldo total"
+          value={formatCurrency(summary.balance)}
+          icon="💰"
+          loading={summaryLoading}
+          error={summaryError}
+          empty={summary.balance === 0}
+          accent="#5B5CF6"
+          tooltip="Suma de todos tus saldos bancarios"
+        />
+        <SummaryCard
+          title="Cuentas"
+          value={summary.accounts}
+          icon="🏦"
+          loading={summaryLoading}
+          error={summaryError}
+          empty={summary.accounts === 0}
+          accent="#22C55E"
+          tooltip="Cantidad de cuentas activas"
+        />
+        <SummaryCard
+          title="Transacciones"
+          value={summary.transactions}
+          icon="⇄"
+          loading={summaryLoading}
+          error={summaryError}
+          empty={summary.transactions === 0}
+          accent="#A855F7"
+          tooltip="Total de transacciones registradas"
+        />
+        <SummaryCard
+          title="Favoritos"
+          value={summary.favorites}
+          icon="★"
+          loading={summaryLoading}
+          error={summaryError}
+          empty={summary.favorites === 0}
+          accent="#F59E42"
+          tooltip="Tus accesos o productos favoritos"
+        />
+      </section>
+
       <section className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-[var(--text)]">Accesos rápidos</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">Selecciona una sección para continuar.</p>
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {items.map((item) => (
-            <Link
-              key={item.id}
-              to={item.path}
-              className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white p-4 transition-all hover:border-[var(--primary)] hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--bg)] text-lg text-[var(--primary)] transition-colors group-hover:bg-[var(--primary)] group-hover:text-white">
-                {item.icon}
-              </span>
-              <span className="font-semibold text-[var(--text)] group-hover:text-[var(--primary)]">
-                {item.label}
-              </span>
-            </Link>
-          ))}
+        <div className="mt-6">
+          <QuickLinks links={quickLinks} loading={summaryLoading} />
         </div>
       </section>
 
