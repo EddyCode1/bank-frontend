@@ -11,18 +11,27 @@ function resolveBankingError(error, fallback) {
 
 function mapAccount(raw) {
   if (!raw) return null
+  const rawStatus = raw.status || raw.estado
+  const normalizedStatus =
+    rawStatus === 'ACTIVA' || rawStatus === 'active' || raw?.isActive === true
+      ? 'active'
+      : rawStatus === 'PENDIENTE'
+      ? 'pending'
+      : rawStatus === 'BLOQUEADA' || rawStatus === 'CERRADA' || rawStatus === 'inactive' || raw?.isActive === false
+      ? 'inactive'
+      : 'active'
+
   return {
     id: raw.id || raw._id || raw.accountId,
     accountNumber: raw.accountNumber || raw.numeroCuenta || raw.numero || raw.account_number,
-    type: raw.type || raw.accountType || raw.tipo || 'Corriente',
+    type: raw.type || raw.accountType || raw.tipo || raw.account_type || 'CORRIENTE',
     currency: raw.currency || raw.moneda || raw.currencyCode || 'GTQ',
-    status:
-      raw.status || raw.estado || (raw.isActive === false ? 'inactive' : raw.isActive === true ? 'active' : 'active'),
+    status: normalizedStatus,
     balance: Number(raw.balance ?? raw.saldo ?? raw.amount ?? 0),
     ownerId: raw.userId || raw.ownerId || raw.usuarioId || raw.customerId,
     ownerName: raw.owner?.nombre || raw.owner?.name || raw.owner?.username || raw.ownerName || raw.username || raw.email || '',
-    dailyLimit: Number(raw.dailyLimit ?? raw.limiteDiario ?? raw.daily_limit ?? 0),
-    monthlyLimit: Number(raw.monthlyLimit ?? raw.limiteMensual ?? raw.monthly_limit ?? 0),
+    dailyLimit: Number(raw.dailyLimit ?? raw.limiteDiario ?? raw.daily_transfer_limit ?? raw.daily_limit ?? 0),
+    monthlyLimit: Number(raw.monthlyLimit ?? raw.limiteMensual ?? raw.single_transfer_limit ?? raw.monthly_limit ?? 0),
     createdAt: raw.createdAt || raw.created_at || raw.createdOn,
     raw,
   }
@@ -53,6 +62,11 @@ function buildParams(filters = {}) {
   return params
 }
 
+function unwrapAccountPayload(payload) {
+  const data = payload?.data ?? payload
+  return data?.account ?? data?.data?.account ?? data
+}
+
 export const accountService = {
   getMyAccounts: async (filters = {}) => {
     try {
@@ -61,6 +75,16 @@ export const accountService = {
       })
       return { success: true, data: normalizeListing(response.data) }
     } catch (error) {
+      if (error.response?.status === 404) {
+        return {
+          success: true,
+          data: {
+            items: [],
+            total: 0,
+            pagination: null,
+          },
+        }
+      }
       console.error('Error fetching my accounts:', error)
       return { success: false, error: resolveBankingError(error, 'Error al obtener mis cuentas') }
     }
@@ -117,7 +141,7 @@ export const accountService = {
   getAccountById: async (accountId) => {
     try {
       const response = await bankingClient.get(`/accounts/${encodeURIComponent(accountId)}`)
-      return { success: true, data: mapAccount(response.data?.data ?? response.data) }
+      return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
     } catch (error) {
       console.error('Error fetching account by id:', error)
       return { success: false, error: resolveBankingError(error, 'Error al obtener cuenta') }
@@ -127,18 +151,13 @@ export const accountService = {
   createAccount: async (accountData) => {
     try {
       const payload = {
-        accountNumber: accountData.accountNumber,
-        type: accountData.type,
+        account_type: accountData.type,
         currency: accountData.currency,
-        estado: accountData.status,
-        saldo: accountData.balance !== undefined ? Number(accountData.balance) : undefined,
-        ownerId: accountData.ownerId,
-        usuarioId: accountData.ownerId,
-        dailyLimit: accountData.dailyLimit,
-        monthlyLimit: accountData.monthlyLimit,
+        balance: accountData.balance !== undefined ? Number(accountData.balance) : 0,
+        userId: accountData.ownerId || undefined,
       }
       const response = await bankingClient.post('/accounts', payload)
-      return { success: true, data: mapAccount(response.data?.data ?? response.data) }
+      return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
     } catch (error) {
       console.error('Error creating account:', error)
       return { success: false, error: resolveBankingError(error, 'Error al crear la cuenta') }
@@ -147,16 +166,22 @@ export const accountService = {
 
   updateAccount: async (accountId, accountData) => {
     try {
+      const mapStatusToEstado = (status) => {
+        if (status === 'active') return 'ACTIVA'
+        if (status === 'inactive') return 'BLOQUEADA'
+        return status
+      }
+
       const payload = {
-        type: accountData.type,
+        account_type: accountData.type,
         currency: accountData.currency,
-        estado: accountData.status,
-        dailyLimit: accountData.dailyLimit,
-        monthlyLimit: accountData.monthlyLimit,
-        saldo: accountData.balance !== undefined ? Number(accountData.balance) : undefined,
+        estado: accountData.status ? mapStatusToEstado(accountData.status) : undefined,
+        daily_transfer_limit: accountData.dailyLimit !== undefined ? Number(accountData.dailyLimit) : undefined,
+        single_transfer_limit: accountData.monthlyLimit !== undefined ? Number(accountData.monthlyLimit) : undefined,
+        account_number: accountData.accountNumber || undefined,
       }
       const response = await bankingClient.put(`/accounts/${encodeURIComponent(accountId)}`, payload)
-      return { success: true, data: mapAccount(response.data?.data ?? response.data) }
+      return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
     } catch (error) {
       console.error('Error updating account:', error)
       return { success: false, error: resolveBankingError(error, 'Error al actualizar la cuenta') }
@@ -167,12 +192,12 @@ export const accountService = {
     try {
       if (newStatus === 'active') {
         const response = await bankingClient.post(`/accounts/${encodeURIComponent(accountId)}/activate`)
-        return { success: true, data: mapAccount(response.data?.data ?? response.data) }
+        return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
       }
       const response = await bankingClient.put(`/accounts/${encodeURIComponent(accountId)}`, {
-        estado: newStatus,
+        estado: 'BLOQUEADA',
       })
-      return { success: true, data: mapAccount(response.data?.data ?? response.data) }
+      return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
     } catch (error) {
       // Fallback: update account directly
       if (error.response?.status === 404 || error.response?.status === 400) {

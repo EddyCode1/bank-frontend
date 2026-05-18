@@ -126,17 +126,6 @@ const useTransactionStore = create((set, get) => ({
       const result = await transactionService.createDeposit(depositData)
       
       if (result.success) {
-        // Pequeño delay para asegurar que el backend procesó el depósito
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Refrescar transacciones para reflejar el nuevo depósito
-        const state = get()
-        const filters = state.pagination.offset ? {
-          offset: state.pagination.offset,
-          limit: state.pagination.limit
-        } : {}
-        
-        await state.fetchMyTransactions(filters)
         set({ loading: false })
       } else {
         set({ error: result.error, loading: false })
@@ -156,17 +145,6 @@ const useTransactionStore = create((set, get) => ({
       const result = await transactionService.createTransfer(transferData)
       
       if (result.success) {
-        // Pequeño delay para asegurar que el backend procesó la transferencia
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Refrescar transacciones para reflejar la nueva transferencia
-        const state = get()
-        const filters = state.pagination.offset ? {
-          offset: state.pagination.offset,
-          limit: state.pagination.limit
-        } : {}
-        
-        await state.fetchMyTransactions(filters)
         set({ loading: false })
       } else {
         set({ error: result.error, loading: false })

@@ -1,6 +1,4 @@
 import adminClient, { publicClient } from '../../../shared/api/adminClient'
-import { MOCK_USERS, TESTING_ADMIN_CREDENTIALS } from '../../../shared/mocks'
-import useAuthStore from '../../auth/store/useAuthStore'
 
 /**
  * Adapta la respuesta del backend (name, surname, phone, role) al modelo
@@ -8,22 +6,39 @@ import useAuthStore from '../../auth/store/useAuthStore'
  */
 function mapUser(raw) {
   if (!raw) return null
+  const accountState = String(raw.accountState || raw.account_state || '').toUpperCase()
+  const rawStatus = String(raw.status || raw.estado || '').toUpperCase()
+  let normalizedStatus = 'active'
+
+  if (accountState === 'PENDIENTE') {
+    normalizedStatus = 'pending'
+  } else if (accountState === 'INACTIVA') {
+    normalizedStatus = 'inactive'
+  } else if (raw.status === false || raw.isActive === false) {
+    normalizedStatus = 'inactive'
+  } else if (
+    rawStatus === 'INACTIVE' ||
+    rawStatus === 'BLOQUEADA' ||
+    rawStatus === 'CERRADA'
+  ) {
+    normalizedStatus = 'inactive'
+  } else if (
+    rawStatus === 'ACTIVE' ||
+    rawStatus === 'ACTIVA' ||
+    raw.status === true ||
+    raw.isActive === true
+  ) {
+    normalizedStatus = 'active'
+  }
+
   return {
     ...raw,
     nombre: [raw.name, raw.surname].filter(Boolean).join(' ') || raw.nombre || '',
     telefono: raw.phone || raw.telefono || '',
     rol: raw.role || raw.rol || 'USER_ROLE',
+    status: normalizedStatus,
     cuentas: raw.cuentas || [],
   }
-}
-
-/** Detecta si la sesión activa corresponde a la cuenta de testing */
-function isTestingAdmin() {
-  const user = useAuthStore.getState().getUser()
-  return (
-    user?.username === TESTING_ADMIN_CREDENTIALS.username ||
-    user?.email === TESTING_ADMIN_CREDENTIALS.email
-  )
 }
 
 export const generateAccountNumber = () =>
@@ -35,23 +50,12 @@ export const generateAccountNumber = () =>
  * usuarios de ejemplo para poder probar el módulo sin datos reales.
  */
 export const getUsers = async ({ search, page = 1, limit = 10 } = {}) => {
-  if (isTestingAdmin()) {
-    return {
-      success: true,
-      data: {
-        items: MOCK_USERS,
-        total: MOCK_USERS.length,
-        pagination: { page: 1, limit: MOCK_USERS.length, total: MOCK_USERS.length },
-      },
-    }
-  }
-
   try {
     const response = await adminClient.get('/users', {
       params: {
-        search: search?.trim() || undefined,
+        searchTerm: search?.trim() || undefined,
         page,
-        limit,
+        pageSize: limit,
       },
     })
     const raw = response.data?.data ?? response.data
@@ -76,10 +80,6 @@ export const getUsers = async ({ search, page = 1, limit = 10 } = {}) => {
  * Con la cuenta de testing devuelve el usuario mock correspondiente.
  */
 export const getUserById = async (userId) => {
-  if (isTestingAdmin()) {
-    const mockUser = MOCK_USERS.find((u) => u.id === userId)
-    if (mockUser) return { success: true, data: mockUser }
-  }
   try {
     const response = await adminClient.get(`/users/${userId}`)
     return { success: true, data: mapUser(response.data?.data ?? response.data) }
@@ -182,14 +182,29 @@ export const updateUser = async (userId, userData) => {
 }
 
 /**
- * Elimina un usuario (ADMIN)
+ * Activa una cuenta de usuario (ADMIN).
+ * AdminController: POST api/v1/admin/users/{userId}/activate
  */
-export const deleteUser = async (userId) => {
+export const activateUser = async (userId) => {
   try {
-    const response = await adminClient.delete(`/users/${userId}`)
+    const response = await adminClient.post(`/users/${userId}/activate`)
     return { success: true, data: response.data?.data ?? response.data }
   } catch (error) {
-    console.error('Error deleting user:', error)
+    console.error('Error activating user:', error)
+    return { success: false, error: parseBackendError(error) }
+  }
+}
+
+/**
+ * Desactiva una cuenta de usuario (ADMIN).
+ * AdminController: POST api/v1/admin/users/{userId}/deactivate
+ */
+export const deactivateUser = async (userId) => {
+  try {
+    const response = await adminClient.post(`/users/${userId}/deactivate`)
+    return { success: true, data: response.data?.data ?? response.data }
+  } catch (error) {
+    console.error('Error deactivating user:', error)
     return { success: false, error: parseBackendError(error) }
   }
 }
@@ -216,7 +231,8 @@ export default {
   getUserById,
   createUser,
   updateUser,
-  deleteUser,
+  activateUser,
+  deactivateUser,
   updateUserRole,
   generateAccountNumber,
 }

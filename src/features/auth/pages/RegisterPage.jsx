@@ -85,8 +85,20 @@ const RegisterPage = () => {
           <label className="block text-sm font-medium text-[var(--text)]">Teléfono</label>
           <input
             type="tel"
-            placeholder="123456789"
-            {...register('telefono', { required: 'Teléfono requerido' })}
+            placeholder="12345678"
+            inputMode="numeric"
+            maxLength={8}
+            {...register('telefono', {
+              required: 'Teléfono requerido',
+              pattern: {
+                value: /^\d{8}$/,
+                message: 'El teléfono debe tener exactamente 8 dígitos',
+              },
+              onChange: (event) => {
+                const onlyDigits = event.target.value.replace(/\D/g, '').slice(0, 8)
+                event.target.value = onlyDigits
+              },
+            })}
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
           />
           {errors.telefono && <p className="text-sm text-red-600">{errors.telefono.message}</p>}
@@ -97,7 +109,13 @@ const RegisterPage = () => {
           <input
             type="password"
             placeholder="••••••••"
-            {...register('password', { required: 'Contraseña requerida' })}
+            {...register('password', {
+              required: 'Contraseña requerida',
+              minLength: {
+                value: 8,
+                message: 'La contraseña debe tener al menos 8 caracteres',
+              },
+            })}
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
           />
           {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}

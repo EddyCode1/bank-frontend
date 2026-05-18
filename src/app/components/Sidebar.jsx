@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../features/auth/store/useAuthStore'
 import LogoEmblem from './LogoEmblem'
+import { isAdminUser } from '../../shared/auth/roles'
 
 /**
  * Sidebar limpio y funcional — estilo bancario profesional
@@ -17,7 +18,7 @@ const menuItems = [
 const Sidebar = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuthStore()
   const navigate = useNavigate()
-  const isAdmin = user?.rol === 'ADMIN_ROLE' || user?.rol === 'admin'
+  const isAdmin = isAdminUser(user)
 
   const handleLogout = () => {
     logout()

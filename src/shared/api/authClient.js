@@ -1,5 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
+import { handleSessionError } from './sessionErrorHandler'
 
 const authClient = axios.create({
   baseURL: import.meta.env.VITE_AUTH_URL || '/api/v1/Auth',
@@ -20,10 +21,7 @@ authClient.interceptors.request.use(
 authClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
-    }
+    handleSessionError(error)
     return Promise.reject(error)
   }
 )

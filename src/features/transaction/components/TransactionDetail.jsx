@@ -12,10 +12,10 @@ export default function TransactionDetail({ transactionId, onClose }) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <div className="w-full max-w-xl rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--primary)]"></div>
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@ export default function TransactionDetail({ transactionId, onClose }) {
   const formatDate = (date) => {
     if (!date) return 'N/A'
     try {
-      return new Date(date).toLocaleDateString('es-ES', {
+      return new Date(date).toLocaleDateString('es-GT', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -41,11 +41,11 @@ export default function TransactionDetail({ transactionId, onClose }) {
     }
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, currency = 'GTQ') => {
     if (typeof amount !== 'number') return 'Q0.00'
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-GT', {
       style: 'currency',
-      currency: 'GTQ',
+      currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount)
@@ -53,107 +53,130 @@ export default function TransactionDetail({ transactionId, onClose }) {
 
   const tx = currentTransaction.data || currentTransaction
   const transactionId_display = tx._id || tx.id || 'N/A'
-  const transactionType = tx.type || tx.transactionType || 'Desconocido'
-  const transactionAmount = tx.amount !== undefined ? tx.amount : 0
+  const transactionType = tx.type || tx.transactionType || tx.transaction_type || 'Desconocido'
+  const transactionAmount = Number(tx.amount ?? tx.transaction_amount ?? 0)
+  const transactionCurrency = tx.currency || tx.currency_to || tx.currency_from || tx.account_id?.currency || 'GTQ'
   const transactionStatus = tx.status || 'completada'
+  const amountDebited = Number(tx.amount_debited ?? tx.debit_amount ?? tx.amount ?? tx.transaction_amount ?? 0)
+  const amountCredited = Number(tx.amount_credited ?? tx.credit_amount ?? tx.amount ?? tx.transaction_amount ?? 0)
+  const fromCurrency = tx.currency_from || tx.from_currency || transactionCurrency
+  const toCurrency = tx.currency_to || tx.to_currency || transactionCurrency
+  const exchangeRate = tx.exchange_rate
+  const conversionNote = tx.conversion_note
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Detalles de Transacción</h2>
+          <h2 className="text-xl font-semibold text-[var(--text)]">Detalles de Transacción</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-2xl text-[var(--muted)] transition hover:opacity-70"
           >
             ×
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="border-b pb-2">
-            <p className="text-sm text-gray-600">ID Transacción</p>
-            <p className="font-semibold break-all text-sm">{transactionId_display}</p>
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-sm text-[var(--muted)]">ID Transacción</p>
+            <p className="break-all text-sm font-semibold text-[var(--text)]">{transactionId_display}</p>
           </div>
 
-          <div className="border-b pb-2">
-            <p className="text-sm text-gray-600">Tipo</p>
-            <p className="font-semibold capitalize">{transactionType}</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-sm text-[var(--muted)]">Tipo</p>
+              <p className="font-semibold capitalize text-[var(--text)]">{transactionType}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-sm text-[var(--muted)]">Estado</p>
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                  transactionStatus.toLowerCase() === 'completed' || transactionStatus.toLowerCase() === 'completada'
+                    ? 'bg-[rgba(31,161,135,0.12)] text-[var(--success)]'
+                    : transactionStatus.toLowerCase() === 'pending'
+                    ? 'bg-[rgba(245,158,11,0.15)] text-[var(--naranja)]'
+                    : 'bg-[rgba(239,68,68,0.12)] text-[var(--danger)]'
+                }`}
+              >
+                {transactionStatus}
+              </span>
+            </div>
           </div>
 
-          <div className="border-b pb-2">
-            <p className="text-sm text-gray-600">Monto</p>
-            <p className={`font-semibold text-lg ${transactionAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(transactionAmount)}
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-sm text-[var(--muted)]">Monto principal</p>
+            <p className="text-lg font-semibold" style={{ color: transactionAmount >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+              {formatCurrency(transactionAmount, transactionCurrency)}
             </p>
           </div>
 
-          <div className="border-b pb-2">
-            <p className="text-sm text-gray-600">Estado</p>
-            <span
-              className={`inline-block px-2 py-1 rounded text-xs font-medium capitalize ${
-                transactionStatus.toLowerCase() === 'completed' || transactionStatus.toLowerCase() === 'completada'
-                  ? 'bg-green-100 text-green-800'
-                  : transactionStatus.toLowerCase() === 'pending'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-              }`}
-            >
-              {transactionStatus}
-            </span>
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-sm text-[var(--muted)]">Fecha</p>
+            <p className="font-semibold text-[var(--text)]">{formatDate(tx.createdAt || tx.date)}</p>
           </div>
 
-          <div className="border-b pb-2">
-            <p className="text-sm text-gray-600">Fecha</p>
-            <p className="font-semibold">{formatDate(tx.createdAt || tx.date)}</p>
-          </div>
+          {(fromCurrency || toCurrency || exchangeRate || conversionNote) && (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--gris-claro-fondo)] p-4">
+              <p className="mb-3 text-sm font-semibold text-[var(--text)]">Información de conversión</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-[var(--muted)]">Monto debitado</p>
+                  <p className="font-semibold text-[var(--text)]">{formatCurrency(amountDebited, fromCurrency || 'GTQ')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--muted)]">Monto acreditado</p>
+                  <p className="font-semibold text-[var(--text)]">{formatCurrency(amountCredited, toCurrency || 'GTQ')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--muted)]">Moneda origen</p>
+                  <p className="font-semibold text-[var(--text)]">{fromCurrency || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--muted)]">Moneda destino</p>
+                  <p className="font-semibold text-[var(--text)]">{toCurrency || 'N/A'}</p>
+                </div>
+                {exchangeRate && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-[var(--muted)]">Tasa usada</p>
+                    <p className="font-semibold text-[var(--text)]">{exchangeRate}</p>
+                  </div>
+                )}
+                {conversionNote && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-[var(--muted)]">Nota de conversión</p>
+                    <p className="font-semibold text-[var(--text)]">{conversionNote}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {tx.reference && (
-            <div className="border-b pb-2">
-              <p className="text-sm text-gray-600">Referencia</p>
-              <p className="font-semibold">{tx.reference}</p>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-sm text-[var(--muted)]">Referencia</p>
+              <p className="font-semibold text-[var(--text)]">{tx.reference}</p>
             </div>
           )}
 
           {tx.concept && (
-            <div className="border-b pb-2">
-              <p className="text-sm text-gray-600">Concepto</p>
-              <p className="font-semibold">{tx.concept}</p>
-            </div>
-          )}
-
-          {tx.accountId && (
-            <div className="border-b pb-2">
-              <p className="text-sm text-gray-600">ID Cuenta</p>
-              <p className="font-semibold break-all text-sm">{tx.accountId}</p>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-sm text-[var(--muted)]">Concepto</p>
+              <p className="font-semibold text-[var(--text)]">{tx.concept}</p>
             </div>
           )}
 
           {tx.description && (
-            <div className="pb-2">
-              <p className="text-sm text-gray-600">Descripción</p>
-              <p className="font-semibold">{tx.description}</p>
-            </div>
-          )}
-
-          {tx.accountNumber && (
-            <div className="pb-2">
-              <p className="text-sm text-gray-600">Número de Cuenta</p>
-              <p className="font-semibold break-all text-sm">{tx.accountNumber}</p>
-            </div>
-          )}
-
-          {tx.currency && (
-            <div className="pb-2">
-              <p className="text-sm text-gray-600">Moneda</p>
-              <p className="font-semibold">{tx.currency}</p>
+            <div className="rounded-2xl bg-white p-4">
+              <p className="text-sm text-[var(--muted)]">Descripción</p>
+              <p className="font-semibold text-[var(--text)]">{tx.description}</p>
             </div>
           )}
         </div>
 
         <button
           onClick={onClose}
-          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition"
+          className="mt-5 w-full rounded-2xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
           Cerrar
         </button>

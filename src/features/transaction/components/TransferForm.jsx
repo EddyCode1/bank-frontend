@@ -2,7 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import useTransactionStore from '../store/useTransactionStore'
 
-export default function TransferForm() {
+export default function TransferForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     sourceAccountId: '',
     destinationAccountId: '',
@@ -112,6 +112,7 @@ export default function TransferForm() {
           concept: ''
         })
         setErrors({})
+        onSuccess?.()
       }
     } catch (error) {
       console.error('Error submitting form:', error)
@@ -122,12 +123,13 @@ export default function TransferForm() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Crear Transferencia</h2>
+    <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h2 className="mb-1 text-xl font-semibold text-[var(--text)]">Crear Transferencia</h2>
+      <p className="mb-5 text-sm text-[var(--muted)]">Envía dinero entre cuentas y registra referencia/concepto opcional.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Source Account Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Cuenta Origen *
           </label>
           <input
@@ -136,20 +138,20 @@ export default function TransferForm() {
             value={formData.sourceAccountId}
             onChange={handleChange}
             placeholder="Ej: tu número de cuenta"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.sourceAccountId
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.sourceAccountId && (
-            <p className="mt-1 text-sm text-red-600">{errors.sourceAccountId}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.sourceAccountId}</p>
           )}
         </div>
 
         {/* Destination Account Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Cuenta Destino *
           </label>
           <input
@@ -158,20 +160,20 @@ export default function TransferForm() {
             value={formData.destinationAccountId}
             onChange={handleChange}
             placeholder="Ej: número de cuenta del beneficiario"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.destinationAccountId
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.destinationAccountId && (
-            <p className="mt-1 text-sm text-red-600">{errors.destinationAccountId}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.destinationAccountId}</p>
           )}
         </div>
 
         {/* Amount Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Monto (GTQ) *
           </label>
           <input
@@ -180,21 +182,21 @@ export default function TransferForm() {
             value={formData.amount}
             onChange={handleChange}
             placeholder="0.00"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.amount
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.amount && (
-            <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.amount}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">Máximo 2 decimales</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">Máximo 2 decimales</p>
         </div>
 
         {/* Reference Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Referencia (Opcional)
           </label>
           <input
@@ -204,21 +206,21 @@ export default function TransferForm() {
             onChange={handleChange}
             placeholder="Ej: Pago de servicios"
             maxLength="100"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.reference
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.reference && (
-            <p className="mt-1 text-sm text-red-600">{errors.reference}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.reference}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">{formData.reference.length}/100</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{formData.reference.length}/100</p>
         </div>
 
         {/* Concept Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Concepto (Opcional)
           </label>
           <textarea
@@ -228,23 +230,23 @@ export default function TransferForm() {
             placeholder="Descripción de la transferencia"
             rows="3"
             maxLength="500"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.concept
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.concept && (
-            <p className="mt-1 text-sm text-red-600">{errors.concept}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.concept}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">{formData.concept.length}/500</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{formData.concept.length}/500</p>
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
+          className="w-full rounded-2xl bg-[var(--success)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? 'Procesando...' : 'Realizar Transferencia'}
         </button>

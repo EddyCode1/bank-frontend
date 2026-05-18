@@ -23,6 +23,36 @@ function offsetToPage(offset, limit) {
   return Math.floor(o / l) + 1
 }
 
+function normalizeTransaction(raw) {
+  if (!raw) return null
+  return {
+    ...raw,
+    id: raw.id || raw._id || raw.transaction_id,
+    type: raw.type || raw.transaction_type || raw.transactionType || 'N/A',
+    amount: Number(raw.amount ?? raw.transaction_amount ?? 0),
+    status: raw.status || (raw.reverted ? 'reverted' : 'completed'),
+    currency: raw.currency || raw.currency_to || raw.currency_from || raw.account_id?.currency || 'GTQ',
+    createdAt: raw.createdAt || raw.created_at || raw.date || raw.timestamp,
+    description: raw.description || raw.transaction_name || raw.concept || raw.reference || '',
+  }
+}
+
+function normalizePendingDeposit(raw) {
+  if (!raw) return null
+  const account = raw.account_id
+  return {
+    ...raw,
+    id: raw._id || raw.id,
+    amount: Number(raw.transaction_amount ?? raw.amount ?? 0),
+    accountNumber: account?.account_number || raw.account_number || raw.to_account || raw.from_account || 'N/A',
+    currencyFrom: raw.currency_from || raw.currency || 'GTQ',
+    currencyTo: raw.currency_to || account?.currency || raw.currency || 'GTQ',
+    secondsRemaining: Number(raw.secondsRemaining ?? 0),
+    canRevert: Boolean(raw.canRevert ?? raw.revertible),
+    createdAt: raw.createdAt || raw.created_at,
+  }
+}
+
 /**
  * Contrato createDeposit del servidor Node: accountNumber, amount, currency (GTQ|USD), description opcional.
  * Valida y mapea correctamente los datos del depósito
@@ -72,17 +102,17 @@ function mapTransferBody(transferData) {
     throw new Error('Los datos de la transferencia no pueden estar vacíos')
   }
 
-  const sourceAccountNumber = String(transferData.sourceAccountNumber ?? transferData.sourceAccountId ?? '').trim()
-  if (!sourceAccountNumber) {
+  const fromAccount = String(transferData.fromAccount ?? transferData.sourceAccountNumber ?? transferData.sourceAccountId ?? '').trim()
+  if (!fromAccount) {
     throw new Error('La cuenta origen es requerida')
   }
 
-  const destinationAccountNumber = String(transferData.destinationAccountNumber ?? transferData.destinationAccountId ?? '').trim()
-  if (!destinationAccountNumber) {
+  const toAccount = String(transferData.toAccount ?? transferData.destinationAccountNumber ?? transferData.destinationAccountId ?? '').trim()
+  if (!toAccount) {
     throw new Error('La cuenta destino es requerida')
   }
 
-  if (sourceAccountNumber === destinationAccountNumber) {
+  if (fromAccount === toAccount) {
     throw new Error('La cuenta destino debe ser diferente a la cuenta origen')
   }
 
@@ -103,8 +133,8 @@ function mapTransferBody(transferData) {
   const description = descriptionParts.length ? descriptionParts.join(' — ') : undefined
 
   const body = {
-    sourceAccountNumber,
-    destinationAccountNumber,
+    fromAccount,
+    toAccount,
     amount,
     currency: transferData.currency ?? 'GTQ',
   }
@@ -132,7 +162,7 @@ export const transactionService = {
       return {
         success: true,
         data: {
-          transactions: Array.isArray(transactions) ? transactions : [],
+          transactions: Array.isArray(transactions) ? transactions.map(normalizeTransaction).filter(Boolean) : [],
           total: total,
           summary: payload.summary,
           pagination: payload.pagination,
@@ -152,7 +182,7 @@ export const transactionService = {
       const response = await bankingClient.get(`/transactions/${id}`)
       const payload = response.data
       const tx = payload.transaction ?? payload.data?.transaction ?? payload
-      return { success: true, data: tx }
+      return { success: true, data: normalizeTransaction(tx) }
     } catch (error) {
       console.error('Error fetching transaction:', error)
       const msg = resolveBankingError(error, 'Error al obtener transacción')
@@ -182,7 +212,7 @@ export const transactionService = {
       return {
         success: true,
         data: {
-          transactions: Array.isArray(transactions) ? transactions : [],
+          transactions: Array.isArray(transactions) ? transactions.map(normalizeTransaction).filter(Boolean) : [],
           total: total,
           pagination: payload.pagination,
         },
@@ -208,7 +238,7 @@ export const transactionService = {
       return {
         success: true,
         data: {
-          transactions: Array.isArray(history) ? history : [],
+          transactions: Array.isArray(history) ? history.map(normalizeTransaction).filter(Boolean) : [],
           total: total,
         },
       }
@@ -233,7 +263,7 @@ export const transactionService = {
       return {
         success: true,
         data: {
-          transactions: Array.isArray(history) ? history : [],
+          transactions: Array.isArray(history) ? history.map(normalizeTransaction).filter(Boolean) : [],
           total: total,
         },
       }
@@ -271,7 +301,7 @@ export const transactionService = {
   createTransfer: async (transferData) => {
     try {
       const body = mapTransferBody(transferData)
-      const response = await bankingClient.post('/transactions/transfer', body)
+      const response = await bankingClient.post('/accounts/transfer', body)
       toast.success('Transferencia realizada exitosamente')
       return { success: true, data: response.data }
     } catch (error) {
@@ -285,6 +315,51 @@ export const transactionService = {
       }
       
       const msg = resolveBankingError(error, 'Error al realizar transferencia')
+      toast.error(msg)
+      return { success: false, error: msg }
+    }
+  },
+
+  getPendingDeposits: async () => {
+    try {
+      const response = await bankingClient.get('/deposits/pending')
+      const payload = response.data || {}
+      const rows = Array.isArray(payload.deposits) ? payload.deposits : []
+      return {
+        success: true,
+        data: {
+          deposits: rows.map(normalizePendingDeposit).filter(Boolean),
+          count: Number(payload.count ?? rows.length ?? 0),
+        },
+      }
+    } catch (error) {
+      console.error('Error fetching pending deposits:', error)
+      const msg = resolveBankingError(error, 'Error al obtener depósitos pendientes')
+      return { success: false, error: msg }
+    }
+  },
+
+  revertDeposit: async (transactionId) => {
+    try {
+      const response = await bankingClient.post('/deposits/revert', { transactionId })
+      toast.success('Depósito revertido correctamente')
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Error reverting deposit:', error)
+      const msg = resolveBankingError(error, 'Error al revertir depósito')
+      toast.error(msg)
+      return { success: false, error: msg }
+    }
+  },
+
+  updateDepositAmount: async (transactionId, amount) => {
+    try {
+      const response = await bankingClient.put(`/deposits/${transactionId}`, { amount })
+      toast.success('Depósito actualizado correctamente')
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Error updating deposit:', error)
+      const msg = resolveBankingError(error, 'Error al actualizar depósito')
       toast.error(msg)
       return { success: false, error: msg }
     }

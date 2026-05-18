@@ -2,7 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import useTransactionStore from '../store/useTransactionStore'
 
-export default function DepositForm() {
+export default function DepositForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     accountId: '',
     amount: '',
@@ -100,6 +100,7 @@ export default function DepositForm() {
           concept: ''
         })
         setErrors({})
+        onSuccess?.()
       }
     } catch (error) {
       console.error('Error submitting form:', error)
@@ -110,12 +111,13 @@ export default function DepositForm() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Crear Depósito</h2>
+    <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h2 className="text-xl font-semibold mb-1 text-[var(--text)]">Crear Depósito</h2>
+      <p className="mb-5 text-sm text-[var(--muted)]">Registra un depósito en GTQ o USD según la cuenta destino.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Account ID Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Número de cuenta *
           </label>
           <input
@@ -124,43 +126,43 @@ export default function DepositForm() {
             value={formData.accountId}
             onChange={handleChange}
             placeholder="Ej: número de cuenta en el banco"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.accountId
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.accountId && (
-            <p className="mt-1 text-sm text-red-600">{errors.accountId}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.accountId}</p>
           )}
         </div>
 
         {/* Currency Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Moneda *
           </label>
           <select
             name="currency"
             value={formData.currency}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.currency
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           >
             <option value="GTQ">GTQ — Quetzales</option>
             <option value="USD">USD — Dólares</option>
           </select>
           {errors.currency && (
-            <p className="mt-1 text-sm text-red-600">{errors.currency}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.currency}</p>
           )}
         </div>
 
         {/* Amount Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Monto ({formData.currency}) *
           </label>
           <input
@@ -169,21 +171,21 @@ export default function DepositForm() {
             value={formData.amount}
             onChange={handleChange}
             placeholder="0.00"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.amount
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.amount && (
-            <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.amount}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">Máximo 2 decimales</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">Máximo 2 decimales</p>
         </div>
 
         {/* Reference Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Referencia (Opcional)
           </label>
           <input
@@ -193,21 +195,21 @@ export default function DepositForm() {
             onChange={handleChange}
             placeholder="Ej: Transferencia bancaria"
             maxLength="100"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.reference
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.reference && (
-            <p className="mt-1 text-sm text-red-600">{errors.reference}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.reference}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">{formData.reference.length}/100</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{formData.reference.length}/100</p>
         </div>
 
         {/* Concept Field */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-[var(--text)]">
             Concepto (Opcional)
           </label>
           <textarea
@@ -217,23 +219,23 @@ export default function DepositForm() {
             placeholder="Descripción del depósito"
             rows="3"
             maxLength="500"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+            className={`w-full rounded-2xl border px-4 py-3 bg-white text-[var(--text)] focus:outline-none ${
               errors.concept
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-[var(--danger)]'
+                : 'border-[var(--border)]'
             }`}
           />
           {errors.concept && (
-            <p className="mt-1 text-sm text-red-600">{errors.concept}</p>
+            <p className="mt-1 text-sm text-[var(--danger)]">{errors.concept}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">{formData.concept.length}/500</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{formData.concept.length}/500</p>
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition"
+          className="w-full rounded-2xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? 'Procesando...' : 'Crear Depósito'}
         </button>

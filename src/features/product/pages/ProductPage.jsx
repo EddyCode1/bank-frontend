@@ -3,14 +3,14 @@ import ProductList from '../components/ProductList'
 import ProductForm from '../components/ProductForm'
 import useAuthStore from '../../auth/store/useAuthStore'
 import useProductStore from '../store/useProductStore'
+import { isAdminUser } from '../../../shared/auth/roles'
 
 export default function ProductPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
 
   const user = useAuthStore((state) => state.user)
-  const userRole = user?.rol || user?.role || ''
-  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMIN_ROLE'
+  const isAdmin = isAdminUser(user)
 
   const {
     products = [],

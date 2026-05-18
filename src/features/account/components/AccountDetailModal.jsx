@@ -107,14 +107,16 @@ export default function AccountDetailModal({
                     <div key={tx.id || tx._id || tx.transactionId} className="rounded-2xl border border-[var(--border)] bg-white p-4">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm font-semibold text-[var(--text)]">{tx.description || tx.concept || 'Movimiento'}</p>
-                        <span className="text-sm text-[var(--muted)]">{new Date(tx.createdAt || tx.date || tx.timestamp || Date.now()).toLocaleDateString('es-GT')}</span>
+                        <span className="text-sm text-[var(--muted)]">
+                          {new Date(tx.createdAt || tx.date || tx.timestamp).toLocaleDateString('es-GT')}
+                        </span>
                       </div>
                       <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                        <p className="text-[var(--muted)]">{tx.type || tx.transactionType || '—'}</p>
-                        <p className={"font-semibold " + ((tx.amount || tx.value || 0) >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
-                          {(Number(tx.amount ?? tx.value ?? 0)).toLocaleString('es-GT', {
+                        <p className="text-[var(--muted)]">{tx.type || tx.transactionType || tx.transaction_type || '—'}</p>
+                        <p className={"font-semibold " + ((Number(tx.amount ?? tx.transaction_amount ?? tx.value ?? 0)) >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
+                          {(Number(tx.amount ?? tx.transaction_amount ?? tx.value ?? 0)).toLocaleString('es-GT', {
                             style: 'currency',
-                            currency: account.currency || 'GTQ',
+                            currency: tx.currency || tx.currency_to || tx.currency_from || account.currency || 'GTQ',
                           })}
                         </p>
                       </div>

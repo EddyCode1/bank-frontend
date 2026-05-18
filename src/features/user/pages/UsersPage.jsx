@@ -1,25 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUsers, createUser, updateUser, deleteUser } from '../service/userService'
+import { getUsers, createUser, updateUser, activateUser, deactivateUser, updateUserRole } from '../service/userService'
 import UserFormModal from '../components/UserFormModal'
-import DeleteUserModal from '../components/DeleteUserModal'
 
 export default function UsersPage() {
     const navigate = useNavigate()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [viewMode, setViewMode] = useState('all') // all | pending
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(10)
     const [totalUsers, setTotalUsers] = useState(0)
 
     // Modal states
     const [isFormModalOpen, setIsFormModalOpen] = useState(false)
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedUser, setSelectedUser] = useState(null)
     const [actionLoading, setActionLoading] = useState(false)
     const [notification, setNotification] = useState(null)
     const [formError, setFormError] = useState(null)
+
+    const getUserStatus = (user) => (user?.status || 'active').toLowerCase()
+    const normalizeRole = (role) => {
+        const value = String(role || '').toUpperCase()
+        if (!value) return 'USER_ROLE'
+        return value.includes('ADMIN') ? 'ADMIN_ROLE' : 'USER_ROLE'
+    }
 
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type })
@@ -74,16 +80,13 @@ export default function UsersPage() {
         setIsFormModalOpen(true)
     }
 
-    const handleDeleteClick = (user) => {
-        setSelectedUser(user)
-        setIsDeleteModalOpen(true)
-    }
-
     const toggleUserStatus = async (user) => {
         const nextStatus = (user.status || 'active').toLowerCase() === 'active' ? 'inactive' : 'active'
         setActionLoading(true)
         try {
-            const result = await updateUser(user.id || user._id, { status: nextStatus })
+            const result = nextStatus === 'active'
+                ? await activateUser(user.id || user._id)
+                : await deactivateUser(user.id || user._id)
             if (result.success) {
                 showNotification(`Usuario ${nextStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success')
                 loadUsers(currentPage)
@@ -97,13 +100,40 @@ export default function UsersPage() {
         }
     }
 
+    const handleActivateUser = async (user) => {
+        setActionLoading(true)
+        try {
+            const result = await activateUser(user.id || user._id)
+            if (result.success) {
+                showNotification('Usuario activado correctamente', 'success')
+                loadUsers(currentPage)
+            } else {
+                showNotification(result.error || 'Error al activar usuario', 'error')
+            }
+        } catch (error) {
+            showNotification(error.message || 'Error inesperado al activar usuario', 'error')
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     const handleFormSubmit = async (userData) => {
         setActionLoading(true)
         setFormError(null)
         try {
             if (selectedUser) {
-                const result = await updateUser(selectedUser.id || selectedUser._id, userData)
+                const userId = selectedUser.id || selectedUser._id
+                const result = await updateUser(userId, userData)
                 if (result.success) {
+                    const previousRole = normalizeRole(selectedUser.rol || selectedUser.role)
+                    const nextRole = normalizeRole(userData.rol)
+                    if (previousRole !== nextRole) {
+                        const roleResult = await updateUserRole(userId, nextRole)
+                        if (!roleResult.success) {
+                            setFormError(roleResult.error || 'Usuario actualizado, pero no se pudo cambiar el rol')
+                            return
+                        }
+                    }
                     showNotification('Usuario actualizado correctamente', 'success')
                     setIsFormModalOpen(false)
                     loadUsers(currentPage)
@@ -132,27 +162,10 @@ export default function UsersPage() {
         }
     }
 
-    const handleDeleteConfirm = async (userId) => {
-        setActionLoading(true)
-        try {
-            const result = await deleteUser(userId)
-            if (result.success) {
-                showNotification('Usuario eliminado correctamente', 'success')
-                setIsDeleteModalOpen(false)
-                loadUsers(currentPage)
-            } else {
-                showNotification(result.error || 'Error al eliminar usuario', 'error')
-            }
-        } catch (error) {
-            showNotification(
-                error.message || 'Error inesperado al eliminar usuario',
-                'error'
-            )
-        } finally {
-            setActionLoading(false)
-        }
-    }
-
+    const pendingUsersCount = users.filter((user) => getUserStatus(user) !== 'active').length
+    const usersToDisplay = viewMode === 'pending'
+        ? users.filter((user) => getUserStatus(user) !== 'active')
+        : users
     const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize))
 
     return (
@@ -199,14 +212,35 @@ export default function UsersPage() {
                 </button>
             </form>
 
+            <div className="mb-4 flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2">
+                <button
+                    type="button"
+                    onClick={() => setViewMode('all')}
+                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${viewMode === 'all' ? 'text-white' : 'text-[var(--text)]'}`}
+                    style={{ background: viewMode === 'all' ? 'var(--primary)' : 'transparent' }}
+                >
+                    Todos ({users.length})
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setViewMode('pending')}
+                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${viewMode === 'pending' ? 'text-white' : 'text-[var(--text)]'}`}
+                    style={{ background: viewMode === 'pending' ? 'var(--primary)' : 'transparent' }}
+                >
+                    Sin activar ({pendingUsersCount})
+                </button>
+            </div>
+
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
                 {loading ? (
                     <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>
                         Cargando usuarios...
                     </div>
-                ) : users.length === 0 ? (
+                ) : usersToDisplay.length === 0 ? (
                     <div className="p-6 text-center" style={{ color: 'var(--muted)' }}>
-                        No hay usuarios disponibles
+                        {viewMode === 'pending'
+                            ? 'No hay usuarios pendientes por activar'
+                            : 'No hay usuarios disponibles'}
                     </div>
                 ) : (
                     <table className="min-w-full border-separate border-spacing-0 text-left">
@@ -222,7 +256,7 @@ export default function UsersPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
+                            {usersToDisplay.map((user) => (
                                 <tr key={user.id || user._id} className="border-b border-[var(--border)] hover:bg-[var(--gris-claro-fondo)] transition">
                                     <td className="px-6 py-4 text-sm text-[var(--text)]">{user.nombre || 'N/A'}</td>
                                     <td className="px-6 py-4 text-sm text-[var(--muted)]">{user.username || 'N/A'}</td>
@@ -253,16 +287,16 @@ export default function UsersPage() {
                                                 Editar
                                             </button>
                                             <button
-                                                onClick={() => toggleUserStatus(user)}
+                                                onClick={() => {
+                                                    if (getUserStatus(user) === 'active') {
+                                                        toggleUserStatus(user)
+                                                    } else {
+                                                        handleActivateUser(user)
+                                                    }
+                                                }}
                                                 className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:opacity-90"
                                             >
-                                                {((user.status || 'active').toLowerCase() === 'active') ? 'Desactivar' : 'Activar'}
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteClick(user)}
-                                                className="rounded-2xl border border-[var(--danger)] px-3 py-2 text-sm font-semibold text-[var(--danger)] transition hover:opacity-90"
-                                            >
-                                                Eliminar
+                                                {getUserStatus(user) === 'active' ? 'Desactivar' : 'Activar'}
                                             </button>
                                         </div>
                                     </td>
@@ -303,13 +337,6 @@ export default function UsersPage() {
                 user={selectedUser}
                 isLoading={actionLoading}
                 submitError={formError}
-            />
-            <DeleteUserModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={handleDeleteConfirm}
-                user={selectedUser}
-                isLoading={actionLoading}
             />
         </div>
     )

@@ -20,6 +20,46 @@ function mapUserForStore(userDetails = {}) {
   }
 }
 
+function resolveLoginErrorMessage(error) {
+  const rawMessage =
+    error.response?.data?.message ||
+    error.response?.data?.title ||
+    error.message ||
+    ''
+
+  const normalized = String(rawMessage).toLowerCase()
+  if (
+    normalized.includes('cuenta pendiente de activación') ||
+    normalized.includes('cuenta pendiente de activacion') ||
+    normalized.includes('account pending') ||
+    normalized.includes('not active')
+  ) {
+    return 'Tu cuenta aún no ha sido activada. Primero necesitas aprobación de administración.'
+  }
+
+  if (normalized.includes('email not verified') || normalized.includes('email no verificado')) {
+    return 'Tu correo aún no está verificado. Revisa tu email y confirma tu cuenta.'
+  }
+
+  return rawMessage || 'Error al iniciar sesión'
+}
+
+function resolveAuthApiError(error, fallbackMessage) {
+  const apiErrors = error.response?.data?.errors
+  const validationMessages =
+    apiErrors && typeof apiErrors === 'object'
+      ? Object.values(apiErrors).flat().filter(Boolean)
+      : []
+
+  return (
+    validationMessages[0] ||
+    error.response?.data?.message ||
+    error.response?.data?.title ||
+    error.message ||
+    fallbackMessage
+  )
+}
+
 export const authService = {
   login: async (email, password) => {
     try {
@@ -52,11 +92,9 @@ export const authService = {
       }
     } catch (error) {
       console.error('Login error:', error)
-
-      toast.error(
-        error.response?.data?.message || error.message || 'Error al iniciar sesión'
-      )
-      return { success: false, error: error.response?.data?.message || error.message }
+      const message = resolveLoginErrorMessage(error)
+      toast.error(message)
+      return { success: false, error: message }
     }
   },
 
@@ -74,8 +112,61 @@ export const authService = {
       const response = await authClient.post('/register', payload)
       return { success: true, user: response.data }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error al registrar usuario')
-      return { success: false, error: error.response?.data?.message || error.message }
+      const message = resolveAuthApiError(error, 'Error al registrar usuario')
+      toast.error(message)
+      return { success: false, error: message }
+    }
+  },
+
+  verifyEmail: async (token) => {
+    try {
+      const response = await authClient.post('/verify-email', { token })
+      const message = response.data?.message || 'Correo verificado correctamente'
+      toast.success(message)
+      return { success: true, data: response.data, message }
+    } catch (error) {
+      const message = resolveAuthApiError(error, 'No se pudo verificar el correo')
+      toast.error(message)
+      return { success: false, error: message }
+    }
+  },
+
+  resendVerification: async (email) => {
+    try {
+      const response = await authClient.post('/resend-verification', { email })
+      const message = response.data?.message || 'Correo de verificación reenviado'
+      toast.success(message)
+      return { success: true, data: response.data, message }
+    } catch (error) {
+      const message = resolveAuthApiError(error, 'No se pudo reenviar el correo de verificación')
+      toast.error(message)
+      return { success: false, error: message }
+    }
+  },
+
+  forgotPassword: async (email) => {
+    try {
+      const response = await authClient.post('/forgot-password', { email })
+      const message = response.data?.message || 'Se enviaron instrucciones de recuperación a tu correo'
+      toast.success(message)
+      return { success: true, data: response.data, message }
+    } catch (error) {
+      const message = resolveAuthApiError(error, 'No se pudo iniciar recuperación de contraseña')
+      toast.error(message)
+      return { success: false, error: message }
+    }
+  },
+
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await authClient.post('/reset-password', { token, newPassword })
+      const message = response.data?.message || 'Contraseña restablecida correctamente'
+      toast.success(message)
+      return { success: true, data: response.data, message }
+    } catch (error) {
+      const message = resolveAuthApiError(error, 'No se pudo restablecer la contraseña')
+      toast.error(message)
+      return { success: false, error: message }
     }
   },
 

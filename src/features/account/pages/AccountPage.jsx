@@ -5,12 +5,13 @@ import { accountService } from '../service'
 import AccountFormModal from '../components/AccountFormModal'
 import AccountDetailModal from '../components/AccountDetailModal'
 import { getUsers } from '../../user/service/userService'
+import { isAdminUser } from '../../../shared/auth/roles'
 
 const ACCOUNT_TYPES = [
   { value: '', label: 'Todos' },
   { value: 'CORRIENTE', label: 'Corriente' },
-  { value: 'AHORROS', label: 'Ahorros' },
-  { value: 'PLAZO', label: 'Cuenta a plazo' },
+  { value: 'AHORRO', label: 'Ahorro' },
+  { value: 'NOMINA', label: 'Nómina' },
 ]
 
 const CURRENCY_OPTIONS = [
@@ -31,11 +32,6 @@ function formatCurrency(amount, currency = 'GTQ') {
     currency,
     maximumFractionDigits: 2,
   })
-}
-
-function isAdminUser(user) {
-  const role = user?.rol || user?.role || ''
-  return String(role).toUpperCase().includes('ADMIN') || role === 'admin'
 }
 
 export default function AccountPage() {

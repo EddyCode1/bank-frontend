@@ -5,7 +5,15 @@ import MainLayout from '../layouts/MainLayout'
 import AuthLayout from '../layouts/AuthLayout'
 
 // Feature exports (usando barrel exports)
-import { LoginPage, RegisterPage } from '../../features/auth'
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+  ResendVerificationPage,
+  ForbiddenPage,
+} from '../../features/auth'
 import { DashboardPage } from '../../features/dashboard'
 import { AccountPage, ProfilePage } from '../../features/account'
 import { FavoritePage } from '../../features/favorite'
@@ -38,6 +46,38 @@ const router = createBrowserRouter([
     element: (
       <AuthLayout>
         <RegisterPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <AuthLayout>
+        <ForgotPasswordPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <AuthLayout>
+        <ResetPasswordPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: '/verify-email',
+    element: (
+      <AuthLayout>
+        <VerifyEmailPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: '/resend-verification',
+    element: (
+      <AuthLayout>
+        <ResendVerificationPage />
       </AuthLayout>
     ),
   },
@@ -93,6 +133,10 @@ const router = createBrowserRouter([
             <UserDetailPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'forbidden',
+        element: <ForbiddenPage />,
       },
     ],
   },

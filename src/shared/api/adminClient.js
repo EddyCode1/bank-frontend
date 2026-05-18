@@ -1,5 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
+import { handleSessionError } from './sessionErrorHandler'
 
 const apiBase = (import.meta.env.VITE_API_BASE || 'http://localhost:5025/api/v1').replace(/\/$/, '')
 
@@ -45,10 +46,7 @@ function attachInterceptors(client) {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
-      }
+      handleSessionError(error)
       return Promise.reject(error)
     }
   )

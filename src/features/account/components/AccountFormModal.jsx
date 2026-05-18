@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 
 const TYPE_OPTIONS = [
   { value: 'CORRIENTE', label: 'Corriente' },
-  { value: 'AHORROS', label: 'Ahorros' },
-  { value: 'PLAZO', label: 'Cuenta a plazo' },
+  { value: 'AHORRO', label: 'Ahorro' },
+  { value: 'NOMINA', label: 'Nómina' },
 ]
 
 const CURRENCY_OPTIONS = [

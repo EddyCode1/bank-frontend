@@ -43,10 +43,10 @@ const LoginPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Campo de correo */}
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-[var(--text)]">Correo electrónico</label>
+          <label className="block text-sm font-medium text-[var(--text)]">Correo o usuario</label>
           <input
-            type="email"
-            placeholder="tu@email.com"
+            type="text"
+            placeholder="tu@email.com o usuario"
             {...register('email', { required: 'Email requerido' })}
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
           />
@@ -78,6 +78,15 @@ const LoginPage = () => {
           {isLoading ? 'Cargando...' : 'Iniciar sesión'}
         </button>
       </form>
+
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <Link to="/forgot-password" className="font-semibold text-[var(--primary)] transition hover:underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+        <Link to="/resend-verification" className="font-semibold text-[var(--primary)] transition hover:underline">
+          Reenviar verificación
+        </Link>
+      </div>
 
       <p className="mt-5 text-center text-sm text-[var(--muted)]">
         ¿No tienes cuenta?{' '}
