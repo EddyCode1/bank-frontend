@@ -1,0 +1,146 @@
+/* Estilos para la tabla de horarios */
+
+.schedule-table-container {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+}
+
+.schedule-table thead {
+  background: linear-gradient(to right, #0F3A5F 0%, #1B5A8F 100%);
+  color: #ffffff;
+}
+
+.schedule-table thead th {
+  padding: 18px 24px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.schedule-col-service {
+  width: 60%;
+}
+
+.schedule-col-hours {
+  width: 40%;
+}
+
+.schedule-row {
+  border-bottom: 1px solid #e0e7ff;
+  transition: background-color 0.2s ease;
+}
+
+.schedule-row:hover {
+  background-color: #f8fafc;
+}
+
+.schedule-category-row {
+  background-color: #1B5A8F;
+}
+
+.schedule-category-row .schedule-category {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 16px 24px;
+  letter-spacing: 0.3px;
+}
+
+.schedule-service-row {
+  background-color: #ffffff;
+}
+
+.schedule-service-row:last-child {
+  border-bottom: none;
+}
+
+.schedule-service {
+  padding: 14px 24px;
+  font-size: 13px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.schedule-hours {
+  padding: 14px 24px;
+  font-size: 13px;
+  color: #0F3A5F;
+  font-weight: 600;
+}
+
+.schedule-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-table thead th {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .schedule-service {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .schedule-hours {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .schedule-category {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .schedule-col-service {
+    width: 65%;
+  }
+
+  .schedule-col-hours {
+    width: 35%;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-table-container {
+    margin-top: 16px;
+  }
+
+  .schedule-table thead th {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .schedule-service {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .schedule-hours {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .schedule-category {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+}

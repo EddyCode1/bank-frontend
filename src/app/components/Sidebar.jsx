@@ -8,6 +8,7 @@ import { isAdminUser } from '../../shared/auth/roles'
  */
 const menuItems = [
   { to: '/loby', label: 'Panel general', icon: '▦' },
+  { to: '/loby/saldos', label: 'Saldos', icon: '💳' },
   { to: '/loby/account', label: 'Cuentas', icon: '◉' },
   { to: '/loby/transactions', label: 'Transacciones', icon: '⇄' },
   { to: '/loby/products', label: 'Productos', icon: '◫' },
