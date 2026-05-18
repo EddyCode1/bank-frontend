@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { financialService } from '../service/financialService'
-import html2canvas from 'html2canvas'
+import html2canvas from 'html2canvas-pro'
 import { jsPDF } from 'jspdf'
 import { CREDIT_CARDS, LOANS, TRANSACTION_FILTER_OPTIONS } from '../constants/financialData'
 import slimCard from '../../../assets/slim-card.png'
@@ -64,7 +64,6 @@ export default function FinancialPage() {
         setLoading(false)
       }
     }
-
     loadData()
   }, [])
 
@@ -80,7 +79,6 @@ export default function FinancialPage() {
         setHistoryLoading(false)
       }
     }
-
     loadHistory()
   }, [filters])
 
@@ -91,19 +89,23 @@ export default function FinancialPage() {
       const element = document.getElementById('financial-export-area')
       if (!element) return
 
-      const scale = 2
+      window.scrollTo(0, 0)
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      const scale = 1.2
       const canvas = await html2canvas(element, {
         scale,
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 5000,
       })
 
       const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
 
-      // px per mm (assuming 96 DPI) multiplied by scale used in html2canvas
       const pxPerMm = (96 / 25.4) * scale
       const pageHeightPx = Math.floor(pdfHeight * pxPerMm)
 
@@ -119,7 +121,7 @@ export default function FinancialPage() {
         const ctx = fragment.getContext('2d')
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(0, 0, fragment.width, fragment.height)
-        ctx.drawImage(canvas, 0, renderedHeight, canvas.width, fragmentHeight, 0, 0, fragment.width, fragment.height)
+        ctx.drawImage(canvas, 0, renderedHeight, canvas.width, fragmentHeight, 0, 0, fragment.width, fragmentHeight)
 
         const imgData = fragment.toDataURL('image/png')
         const imgHeightMm = fragment.height / pxPerMm
@@ -133,9 +135,7 @@ export default function FinancialPage() {
 
       pdf.save('saldos.pdf')
     } catch (err) {
-      // Provide detailed logging for the user to inspect in the browser console
-      // eslint-disable-next-line no-console
-      console.error('Error exportando PDF:', err instanceof Error ? err.message : err, err)
+      console.error('Error exportando PDF:', err instanceof Error ? err.message : err)
       alert('No fue posible exportar el PDF. Revisa la consola para más detalles.')
     }
   }
@@ -148,17 +148,12 @@ export default function FinancialPage() {
           <p>Accede a tu información de tarjetas de crédito y préstamos con un diseño pensado para experiencia bancaria enterprise.</p>
         </div>
         <div className="financial-header-right">
-          <img
-            src={slimCard}
-            alt="Tarjeta ejemplo"
-            className="financial-hero-image"
-          />
+          <img src={slimCard} alt="Tarjeta ejemplo" className="financial-hero-image" />
         </div>
         <div className="financial-actions">
           <button className="export-button" type="button" onClick={handleExportPdf}>
             Exportar PDF
           </button>
-          <button className="export-button" type="button">Exportar Excel</button>
         </div>
       </div>
 
@@ -172,18 +167,11 @@ export default function FinancialPage() {
         <section className="financial-section">
           <h2 className="section-title">Tarjetas de Crédito</h2>
           <div className="financial-card-sample-wrap">
-            <img
-              src={slimCard}
-              alt="Vista móvil tarjeta"
-              className="financial-card-sample"
-            />
+            <img src={slimCard} alt="Vista móvil tarjeta" className="financial-card-sample" />
           </div>
           <div className="financial-cards-list">
             {creditCards.map((card) => (
-              <div
-                key={card.id}
-                className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm"
-              >
+              <div key={card.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">{card.name}</h3>
@@ -222,10 +210,7 @@ export default function FinancialPage() {
           <h2 className="section-title">Préstamos</h2>
           <div className="financial-loans-list">
             {loans.map((loan) => (
-              <div
-                key={loan.id}
-                className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm"
-              >
+              <div key={loan.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">{loan.name}</h3>
