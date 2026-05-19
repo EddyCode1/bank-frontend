@@ -24,7 +24,7 @@ const ScheduleTable = ({ schedules = [] }) => {
           </tr>
         </thead>
         <tbody>
-          {schedules.map((schedule, index) => (
+          {schedules.map((schedule) => (
             <React.Fragment key={schedule.id}>
               <tr className="schedule-row schedule-category-row">
                 <td className="schedule-category" colSpan="2">

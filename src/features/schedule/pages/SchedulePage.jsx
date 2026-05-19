@@ -2,7 +2,7 @@
  * Página principal de horarios de servicios
  */
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScheduleTable } from '../components';
 import { SERVICE_SCHEDULES, SCHEDULE_DAYS } from '../constants/scheduleData';
 import './SchedulePage.css';

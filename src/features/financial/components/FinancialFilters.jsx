@@ -1,5 +1,3 @@
-import React from 'react'
-
 const FinancialFilters = ({ filters, onChange }) => (
   <div className="financial-filters grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div>

@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/useAuthStore'
 import { authService } from '../service/authService'
-import logoPrincipal from '../../../assets/logo-principal-quetzal.png'
 import fondoRelieve from '../../../assets/LoginImage.png'
 
 /**
@@ -15,8 +14,6 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
-  const [emailValue, setEmailValue] = useState('')
-  const [passwordValue, setPasswordValue] = useState('')
   const { register, handleSubmit, formState: { errors }, watch } = useForm()
   const { login } = useAuthStore()
   const navigate = useNavigate()
@@ -166,6 +163,21 @@ const LoginPage = () => {
                     className="block rounded-xl border-2 border-[#2d5a8c]/30 bg-[#2d5a8c]/5 px-4 py-3 text-center text-sm font-semibold text-[#2d5a8c] transition-all duration-300 hover:border-[#2d5a8c] hover:bg-[#2d5a8c]/10 hover:shadow-md"
                   >
                     ✨ Crear cuenta
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to="/verify-email"
+                    className="block rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-center text-xs font-semibold text-[#2d5a8c] transition-all duration-300 hover:border-[#2d5a8c] hover:bg-[#2d5a8c]/5"
+                  >
+                    ✉️ Verificar correo
+                  </Link>
+                  <Link
+                    to="/resend-verification"
+                    className="block rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-center text-xs font-semibold text-[#2d5a8c] transition-all duration-300 hover:border-[#2d5a8c] hover:bg-[#2d5a8c]/5"
+                  >
+                    🔄 Reenviar verificación
                   </Link>
                 </div>
               </div>

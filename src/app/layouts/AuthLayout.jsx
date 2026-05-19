@@ -1,5 +1,3 @@
-
-import BrandLogo from '../components/BrandLogo'
 import Footer from '../components/Footer'
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { financialService } from '../service/financialService'
 import html2canvas from 'html2canvas-pro'
 import { jsPDF } from 'jspdf'
@@ -158,9 +158,15 @@ export default function FinancialPage() {
       </div>
 
       <div className="financial-summary-grid">
-        {summary.map((item) => (
-          <FinancialSummaryCard key={item.title} {...item} />
-        ))}
+        {loading ? (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600">
+            Cargando saldos...
+          </div>
+        ) : (
+          summary.map((item) => (
+            <FinancialSummaryCard key={item.title} {...item} />
+          ))
+        )}
       </div>
 
       <div className="financial-grid-2">

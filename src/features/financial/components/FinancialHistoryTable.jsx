@@ -1,5 +1,3 @@
-import React from 'react'
-
 const FinancialHistoryTable = ({ items }) => {
   if (!items.length) {
     return (

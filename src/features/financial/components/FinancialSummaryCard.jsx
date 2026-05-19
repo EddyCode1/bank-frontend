@@ -1,5 +1,3 @@
-import React from 'react'
-
 const FinancialSummaryCard = ({ title, value, subtitle }) => (
   <div className="financial-summary-card rounded-2xl border border-slate-200 bg-slate-50 p-5">
     <span className="block text-sm font-medium text-slate-500">{title}</span>
