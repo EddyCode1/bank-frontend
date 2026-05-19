@@ -45,7 +45,8 @@ export function useMyAccounts({ autoLoad = true, limit = 50 } = {}) {
   }, [])
 
   const refresh = useCallback(async () => {
-    await Promise.all([loadAccounts(), loadSummary()])
+    await loadAccounts()
+    await loadSummary()
   }, [loadAccounts, loadSummary])
 
   useEffect(() => {

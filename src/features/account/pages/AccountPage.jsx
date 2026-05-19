@@ -138,7 +138,7 @@ export default function AccountPage() {
     try {
       const result = accountToEdit
         ? await accountService.updateAccount(accountToEdit.id, payload)
-        : await accountService.createAccount(payload)
+        : await accountService.createAccount(payload, { isAdmin })
       if (result.success) {
         toast.success(accountToEdit ? 'Cuenta actualizada' : 'Cuenta creada')
         setFormOpen(false)

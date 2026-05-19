@@ -212,25 +212,31 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Tasas de referencia desde el backend
+  // Tasas de referencia de mercado (valor real de USD/EUR frente a GTQ)
   useEffect(() => {
     async function loadReferenceRates() {
       setLoadingReferenceRates(true);
       setReferenceError('');
       try {
-        const [usdRes, eurRes] = await Promise.all([
-          bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'USD', amount: 1 } }),
-          bankingClient.get('/currency/convert', { params: { from: 'GTQ', to: 'EUR', amount: 1 } }),
+        const [usdResponse, eurResponse] = await Promise.all([
+          fetch('https://api.exchangerate.host/latest?base=USD&symbols=GTQ'),
+          fetch('https://api.exchangerate.host/latest?base=EUR&symbols=GTQ'),
         ]);
-        const usdData = usdRes?.data;
-        const eurData = eurRes?.data;
+
+        if (!usdResponse.ok || !eurResponse.ok) {
+          throw new Error(`Error al obtener tasas de mercado: ${usdResponse.status}/${eurResponse.status}`);
+        }
+
+        const usdData = await usdResponse.json();
+        const eurData = await eurResponse.json();
+
         setReferenceRates({
-          usdRate: Number(usdData?.convertedAmount ?? usdData?.data?.rate ?? 0),
-          eurRate: Number(eurData?.convertedAmount ?? eurData?.data?.rate ?? 0),
+          usdRate: Number(usdData?.rates?.GTQ ?? 0),
+          eurRate: Number(eurData?.rates?.GTQ ?? 0),
           updatedAt: new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }),
         });
       } catch {
-        setReferenceError('No fue posible cargar las tasas del backend.');
+        setReferenceError('No fue posible cargar las tasas de mercado.');
       } finally {
         setLoadingReferenceRates(false);
       }
@@ -453,13 +459,13 @@ export default function DashboardPage() {
             <div className="mt-4 space-y-2">
               <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3">
                 <span className="text-sm font-semibold text-[var(--muted)]">🇺🇸 USD</span>
-                <span className="font-bold text-[var(--primary)]">{referenceRates?.usdRate?.toFixed(4)}</span>
+                <span className="font-bold text-[var(--primary)]">{referenceRates?.usdRate?.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3">
                 <span className="text-sm font-semibold text-[var(--muted)]">🇪🇺 EUR</span>
-                <span className="font-bold text-[var(--primary)]">{referenceRates?.eurRate?.toFixed(4)}</span>
+                <span className="font-bold text-[var(--primary)]">{referenceRates?.eurRate?.toFixed(2)}</span>
               </div>
-              <p className="text-xs text-[var(--muted)]">Por 1 GTQ · {referenceRates?.updatedAt}</p>
+              <p className="text-xs text-[var(--muted)]">Valor en GTQ por 1 unidad · {referenceRates?.updatedAt}</p>
             </div>
           )}
           {referenceError ? <p className="mt-2 text-xs text-amber-600">{referenceError}</p> : null}

@@ -154,59 +154,67 @@ export default function AccountFormModal({
               {errors.currency && <p className="mt-1 text-xs text-[var(--danger)]">{errors.currency}</p>}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--muted)]">Estado</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Estado</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--muted)]">Saldo inicial</label>
-              <input
-                type="number"
-                step="0.01"
-                name="balance"
-                value={formData.balance}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
-                min="0"
-              />
-              {errors.balance && <p className="mt-1 text-xs text-[var(--danger)]">{errors.balance}</p>}
-            </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Saldo inicial</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="balance"
+                  value={formData.balance}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
+                  min="0"
+                />
+                {errors.balance && <p className="mt-1 text-xs text-[var(--danger)]">{errors.balance}</p>}
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--muted)]">Límite diario</label>
-              <input
-                type="number"
-                step="0.01"
-                name="dailyLimit"
-                value={formData.dailyLimit}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
-                min="0"
-              />
-            </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Límite diario</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="dailyLimit"
+                  value={formData.dailyLimit}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
+                  min="0"
+                />
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--muted)]">Límite mensual</label>
-              <input
-                type="number"
-                step="0.01"
-                name="monthlyLimit"
-                value={formData.monthlyLimit}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
-                min="0"
-              />
-            </div>
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted)]">Límite mensual</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="monthlyLimit"
+                  value={formData.monthlyLimit}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border px-3 py-2 bg-[var(--bg)] text-[var(--text)]"
+                  min="0"
+                />
+              </div>
+            )}
 
             {isAdmin && !isEditing && (
               <div className="lg:col-span-2">

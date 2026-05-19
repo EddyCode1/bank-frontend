@@ -6,6 +6,9 @@ function resolveBankingError(error, fallback) {
   if (!error.response && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
     return `No hay conexión con el servidor bancario (${defaultBankingBase}). Arranca el API Node y vuelve a intentarlo.`
   }
+  if (error.response?.status === 429) {
+    return 'Demasiadas solicitudes al servidor bancario. Espera unos segundos y vuelve a intentarlo.'
+  }
   return error.response?.data?.message || error.response?.data?.error || fallback || error.message
 }
 
@@ -148,15 +151,22 @@ export const accountService = {
     }
   },
 
-  createAccount: async (accountData) => {
+  createAccount: async (accountData, { isAdmin } = {}) => {
     try {
-      const payload = {
+      const basePayload = {
         account_type: accountData.type,
         currency: accountData.currency,
-        balance: accountData.balance !== undefined ? Number(accountData.balance) : 0,
-        userId: accountData.ownerId || undefined,
       }
-      const response = await bankingClient.post('/accounts', payload)
+      const payload = isAdmin
+        ? {
+            ...basePayload,
+            balance: accountData.balance !== undefined ? Number(accountData.balance) : 0,
+            userId: accountData.ownerId || undefined,
+          }
+        : basePayload
+
+      const route = isAdmin ? '/accounts' : '/accounts/my-account'
+      const response = await bankingClient.post(route, payload)
       return { success: true, data: mapAccount(unwrapAccountPayload(response.data)) }
     } catch (error) {
       console.error('Error creating account:', error)
