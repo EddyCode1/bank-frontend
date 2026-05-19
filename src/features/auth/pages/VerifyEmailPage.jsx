@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { MailCheck, KeyRound, ArrowRight } from 'lucide-react'
 import { authService } from '../service/authService'
 
 export default function VerifyEmailPage() {
@@ -15,53 +16,72 @@ export default function VerifyEmailPage() {
     setIsLoading(true)
     try {
       const result = await authService.verifyEmail(token)
-      if (result.success) {
-        navigate('/login')
-      }
+      if (result.success) navigate('/login')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-white p-8 shadow-[0_18px_40px_-26px_rgba(15,23,42,0.45)]">
-      <div className="mb-7">
-        <h1 className="text-3xl font-bold text-[var(--text)]">Verificar correo</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          Confirma tu cuenta usando el enlace que recibiste por correo.
-        </p>
-      </div>
-
-      {!tokenFromUrl && (
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-[var(--text)]">Token de verificación</label>
-          <input
-            type="text"
-            value={tokenInput}
-            onChange={(event) => setTokenInput(event.target.value)}
-            placeholder="Pega aquí el token del correo"
-            className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
-          />
+    <div className="w-full max-w-sm">
+      <div className="rounded-2xl border border-white/60 bg-white/95 p-8 shadow-[0_20px_60px_-20px_rgba(15,39,68,0.25)] backdrop-blur-sm">
+        <div className="mb-7 text-center">
+          <div className="mb-3 flex justify-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d5a8c]/10 text-[#2d5a8c]">
+              <MailCheck size={22} />
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Verificar correo</h1>
+          <p className="mt-1.5 text-sm text-slate-500">Confirma tu cuenta usando el enlace o token que recibiste.</p>
         </div>
-      )}
 
-      <button
-        type="button"
-        onClick={handleVerify}
-        disabled={isLoading || (!tokenFromUrl && !tokenInput.trim())}
-        className="mt-5 w-full rounded-xl bg-[var(--primary)] py-2.5 font-semibold text-white transition hover:bg-[var(--primary-dark)] disabled:cursor-not-allowed disabled:bg-[var(--muted)]"
-      >
-        {isLoading ? 'Procesando...' : 'Verificar correo'}
-      </button>
+        {!tokenFromUrl && (
+          <div className="mb-4">
+            <label className="mb-1.5 block text-xs font-semibold text-slate-600">Token de verificación</label>
+            <div className="relative">
+              <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={tokenInput}
+                onChange={(event) => setTokenInput(event.target.value)}
+                placeholder="Pega aquí el token del correo"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-[#2d5a8c] focus:ring-2 focus:ring-[#2d5a8c]/15"
+              />
+            </div>
+          </div>
+        )}
 
-      <div className="mt-5 flex items-center justify-between text-sm">
-        <Link to="/resend-verification" className="font-semibold text-[var(--primary)] transition hover:underline">
-          Reenviar correo de verificación
-        </Link>
-        <Link to="/login" className="font-semibold text-[var(--primary)] transition hover:underline">
-          Volver al login
-        </Link>
+        <button
+          type="button"
+          onClick={handleVerify}
+          disabled={isLoading || (!tokenFromUrl && !tokenInput.trim())}
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#2d5a8c] py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1e3a5f] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoading ? (
+            <>
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Verificando...
+            </>
+          ) : (
+            <>
+              Verificar correo
+              <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+            </>
+          )}
+        </button>
+
+        <p className="mt-6 text-center text-xs text-slate-500">
+          <Link to="/login" className="font-semibold text-[#2d5a8c] hover:underline">
+            Volver al inicio de sesión
+          </Link>
+        </p>
+
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+          <Link to="/resend-verification" className="hover:text-[#2d5a8c] hover:underline">
+            ¿No recibiste el correo? Reenviar
+          </Link>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }

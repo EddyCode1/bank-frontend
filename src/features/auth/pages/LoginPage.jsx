@@ -5,7 +5,6 @@ import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { authService } from '../service/authService'
-import fondoRelieve from '../../../assets/LoginImage.png'
 
 /**
  * Página de Login con card centrada sobre el fondo de quetzales en relieve.
@@ -36,16 +35,8 @@ const LoginPage = () => {
   }
 
   return (
-    <section className="relative flex min-h-[calc(100vh-72px)] items-center justify-center overflow-hidden bg-slate-100 px-4 py-10">
-      <img
-        src={fondoRelieve}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
-      />
-
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="rounded-2xl border border-white/60 bg-white/95 p-8 shadow-[0_20px_60px_-20px_rgba(15,39,68,0.25)] backdrop-blur-sm">
+    <div className="w-full max-w-sm">
+      <div className="rounded-2xl border border-white/60 bg-white/95 p-8 shadow-[0_20px_60px_-20px_rgba(15,39,68,0.25)] backdrop-blur-sm">
           <div className="mb-7 text-center">
             <span className="inline-block rounded-full bg-[#2d5a8c]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2d5a8c]">
               Banco del Quetzal
@@ -137,8 +128,7 @@ const LoginPage = () => {
             </Link>
           </div>
         </div>
-      </div>
-    </section>
+    </div>
   )
 }
 
