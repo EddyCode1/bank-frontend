@@ -1,9 +1,9 @@
 
 import { Link } from 'react-router-dom';
-import { useFavorites } from '../hooks/useFavorites';
+import { useQuickLinkFavorites } from '../hooks/useQuickLinkFavorites';
 
 export default function QuickLinks({ links, loading }) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useQuickLinkFavorites();
 
   if (loading) {
     return (

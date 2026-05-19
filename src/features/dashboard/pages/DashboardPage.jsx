@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import { bankingClient } from '../../../shared/api/adminClient';
 import { accountService } from '../../account/service';
 import { transactionService } from '../../transaction/service/transactionService';
+import { getFavorites as fetchFavorites } from '../../favorite/service/favoriteService';
 import useAuthStore from '../../auth/store/useAuthStore';
 import SummaryCard from '../components/SummaryCard';
 import QuickLinks from '../components/QuickLinks';
-import { getFavorites } from '../hooks/useFavorites';
 
 // Ilustraciones
 import bannerCreditos from '../../../assets/banner-creditos.png';
@@ -178,14 +178,14 @@ export default function DashboardPage() {
       Promise.all([
         accountService.getMyInfo(),
         transactionService.getMyTransactions({ limit: 1 }),
-        // Aquí podrías agregar favoritos reales si existe API
+        fetchFavorites(),
       ])
-        .then(([accountInfo, txInfo]) => {
+        .then(([accountInfo, txInfo, favInfo]) => {
           setSummary({
             accounts: accountInfo?.data?.summary?.totalAccounts ?? 0,
             balance: accountInfo?.data?.summary?.totalBalance ?? 0,
             transactions: txInfo?.data?.total ?? 0,
-            favorites: getFavorites().length,
+            favorites: favInfo?.success ? (favInfo.data?.length ?? 0) : 0,
           });
         })
         .catch((_err) => {
@@ -196,16 +196,19 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  // Sincroniza contador de favoritos cuando cambia en dashboard/favoritos.
+  // Sincroniza contador de favoritos cuando se actualiza en otras pestañas.
+  // El evento favorites:updated lo dispara FavoritePage al agregar/quitar/editar.
   useEffect(() => {
-    const syncFavoritesSummary = () => {
-      setSummary((prev) => ({ ...prev, favorites: getFavorites().length }));
+    const refreshFavoritesCount = async () => {
+      const favInfo = await fetchFavorites();
+      setSummary((prev) => ({
+        ...prev,
+        favorites: favInfo?.success ? (favInfo.data?.length ?? 0) : prev.favorites,
+      }));
     };
-    window.addEventListener('favorites:updated', syncFavoritesSummary);
-    window.addEventListener('storage', syncFavoritesSummary);
+    window.addEventListener('favorites:updated', refreshFavoritesCount);
     return () => {
-      window.removeEventListener('favorites:updated', syncFavoritesSummary);
-      window.removeEventListener('storage', syncFavoritesSummary);
+      window.removeEventListener('favorites:updated', refreshFavoritesCount);
     };
   }, []);
 
