@@ -1,6 +1,8 @@
-# Testing — Cuenta Admin
+# Testing — Credenciales y cuentas demo
 
-## Cuenta de administrador (sembrada por el backend)
+Todos los usuarios de demo aceptan **una sola contraseña conocida**, que se setea automáticamente al correr el script de reseteo masivo del backend (`npm run seed:passwords`, ver más abajo).
+
+## Cuenta administradora (sembrada por `AdminSeed.cs`)
 
 | Campo      | Valor            |
 |------------|------------------|
@@ -9,54 +11,40 @@
 | Contraseña | `ADMINB`         |
 | Rol        | `ADMIN_ROLE`     |
 
-El seeder (`AdminSeed.cs`) crea esta cuenta al arrancar la API si no existe.
+> El seeder de admin se ejecuta solo si la cuenta no existe; no toca la contraseña si ya está creada.
 
----
+## Clientes demo (cuentas reales con datos sembrados)
 
-## Cómo funciona el testing de usuarios
+Todos comparten la contraseña **`Cliente123!`**.
 
-El módulo de **Usuarios** tiene comportamiento distinto según la cuenta con la
-que se ingrese.
+| Usuario   | Email                              | Rol         | Cuentas | Notas                                          |
+|-----------|------------------------------------|-------------|---------|------------------------------------------------|
+| Astral910 | `josueboror2018@gmail.com`         | USER_ROLE   | 3       | Cliente principal con saldo y transacciones    |
+| Astral    | `josueboror2026@gmail.com`         | USER_ROLE   | —       | Cliente secundario                             |
+| Merida    | `merida@example.com`               | USER_ROLE   | —       | Cliente con datos demográficos completos       |
+| japerez   | `jsajchee-202438000@kinal.edu.gt`  | USER_ROLE   | —       | Cliente de prueba (Juan Pérez)                 |
+| tuser     | `t@t.com`                          | USER_ROLE   | —       | Cliente de smoke test                          |
 
-### Lógica por cuenta
+Cualquiera de estos puede loguearse en `http://localhost:5173/login` con su username o su email.
 
-- **Login con `ADMINB` / `admin@bank.com`** → se muestran siempre los
-  **5 usuarios de ejemplo** con sus cuentas bancarias (modo testing).
-- **Login con cualquier otro usuario admin** → se muestran los usuarios
-  reales que devuelve el backend.
+## Cómo regenerar las contraseñas (si se reinicia la base)
 
-### Usuarios de ejemplo (heredados de `ft/kevin`)
+Si se reseteó la base o se quiere volver a un estado conocido:
 
-| # | Nombre                | Usuario     | Cuentas |
-|---|-----------------------|-------------|---------|
-| 1 | Juan García López     | jgarcia     | 2       |
-| 2 | María Rodríguez Pérez | mrodriguez  | 1       |
-| 3 | Carlos Martínez S.    | cmartinez   | 3       |
-| 4 | Ana Fernández López   | afernandez  | 1       |
-| 5 | Pedro González López  | pgonzalez   | 0       |
+1. Arrancar el backend .NET (puerto 5025) y el backend Node (puerto 3000).
+2. Loguearse como admin (`ADMINB` / `ADMINB`) — el `AdminSeed.cs` lo recrea solo.
+3. Desde la raíz de `Sistema-Bancario--SCRUM` ejecutar:
 
-Al hacer clic en **Ver** de cualquier usuario de ejemplo, la pestaña
-**Cuentas** muestra sus cuentas con número, tipo, saldo y estado.
+   ```bash
+   npm run seed:passwords
+   ```
 
----
+   El script llama a `POST /api/v1/admin/users/{userId}/reset-password` para cada cliente listado en `scripts/seed-passwords.js` y deja todas las contraseñas en `Cliente123!`.
 
-## Flujo de prueba
+> El endpoint `POST /api/v1/admin/users/{userId}/reset-password` está protegido con JWT + rol admin. Pedimos esta vía explícita en lugar de modificar la BD a mano para mantener el hashing consistente con `IPasswordHashService`.
 
-### 1. Iniciar servicios
-- API:      `http://localhost:3000`
-- Frontend: `http://localhost:5173`
+## Flujo recomendado para demo
 
-### 2. Login
-Ir a `http://localhost:5173/login` e ingresar:
-- Usuario: `ADMINB`
-- Contraseña: `ADMINB`
-
-### 3. Navegar al módulo de Usuarios
-Ruta: `/loby/users`
-
-Aparecerán los 5 usuarios de ejemplo de Kevin.
-
-### 4. Ver detalle
-Hacer clic en **Ver** de cualquier usuario para ver:
-- Pestaña **Datos Personales**: nombre, email, teléfono, rol, dirección
-- Pestaña **Cuentas**: cuentas bancarias con saldo y estado
+1. Login como `ADMINB` → entrar a `/loby/users`, `/loby/account` (panel admin), `/loby/products` (gestión + solicitudes), `/loby/services` (catálogo + gestión + pagos globales) y `/loby/transactions` (admin deposits + global tx).
+2. Logout y login como `josueboror2018@gmail.com` con `Cliente123!` → mostrar `/loby/account` (mis cuentas), `/loby/transactions` (mis tx + transferencia), `/loby/favorites` (agregar + transferir rápido), `/loby/products` (solicitar producto), `/loby/services` (pagar servicio), `/loby/saldos` (resumen + exportar PDF), `/loby/profile`.
+3. Cubre todas las vistas de la rúbrica: cliente y admin.
