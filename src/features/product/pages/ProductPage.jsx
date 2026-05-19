@@ -4,6 +4,7 @@ import ProductList from '../components/ProductList'
 import ProductForm from '../components/ProductForm'
 import useAuthStore from '../../auth/store/useAuthStore'
 import useProductStore from '../store/useProductStore'
+import { useProductRequests } from '../hooks/useProductRequests'
 import { isAdminUser } from '../../../shared/auth/roles'
 import { bankingClient } from '../../../shared/api/adminClient'
 
@@ -24,10 +25,7 @@ export default function ProductPage() {
   const [requestingProduct, setRequestingProduct] = useState(null)
   const [requestNotes, setRequestNotes] = useState('')
   const [requestingId, setRequestingId] = useState(null)
-  const [requestsLoading, setRequestsLoading] = useState(false)
   const [statusUpdatingId, setStatusUpdatingId] = useState(null)
-  const [myRequests, setMyRequests] = useState([])
-  const [allRequests, setAllRequests] = useState([])
 
   const user = useAuthStore((state) => state.user)
   const isAdmin = isAdminUser(user)
@@ -48,31 +46,12 @@ export default function ProductPage() {
     // setFilters internamente dispara fetchProducts con el nuevo filtro
   }, [setFilters])
 
-  const loadRequests = async () => {
-    setRequestsLoading(true)
-    try {
-      const [myRes, allRes] = await Promise.all([
-        bankingClient.get('/products/requests/me'),
-        isAdmin ? bankingClient.get('/products/requests') : Promise.resolve(null),
-      ])
-      setMyRequests(myRes?.data?.requests ?? [])
-      if (isAdmin) {
-        setAllRequests(allRes?.data?.requests ?? [])
-      }
-    } catch (err) {
-      toast.error(resolveApiError(err, 'No se pudieron cargar las solicitudes de productos'))
-    } finally {
-      setRequestsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadRequests()
-    }, 0)
-    return () => window.clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin])
+  const {
+    myRequests,
+    allRequests,
+    loading: requestsLoading,
+    refresh: loadRequests,
+  } = useProductRequests({ isAdmin, autoLoad: true })
 
   const handleEdit = (product) => {
     setEditingProduct(product)
@@ -162,19 +141,19 @@ export default function ProductPage() {
   )
 
   return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: '#F5F7FA' }}>
+    <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: '#1F2A44' }}>Catálogo de Productos</h1>
-            <p className="mt-1" style={{ color: '#475569' }}>Gestión integral de servicios financieros</p>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>Catálogo de Productos</h1>
+            <p className="mt-1" style={{ color: 'var(--muted)' }}>Gestión integral de servicios financieros</p>
           </div>
 
           {isAdmin && (
             <button
               onClick={() => setShowForm(true)}
               className="px-6 py-2 text-white rounded-lg transition-all font-semibold shadow-md active:scale-95"
-              style={{ backgroundColor: '#2C4A7A' }}
+              style={{ backgroundColor: 'var(--primary)' }}
             >
               + Nuevo Registro
             </button>
@@ -190,12 +169,12 @@ export default function ProductPage() {
 
         <div className="mb-8 flex flex-wrap gap-4 p-5 bg-white rounded-xl shadow-sm border" style={{ borderColor: '#94A3B844' }}>
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Estado de Cuenta</span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Estado de Cuenta</span>
             <select
               value={filters.is_active}
               onChange={(e) => setFilters({ type: 'PRODUCTO', is_active: e.target.value })}
               className="px-4 py-2 border rounded-lg focus:outline-none"
-              style={{ borderColor: '#94A3B8', color: '#1E293B' }}
+              style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
             >
               <option value="">Cualquier estado</option>
               <option value="true">Activos</option>
@@ -232,18 +211,18 @@ export default function ProductPage() {
             requestingId={requestingId}
           />
         ) : (
-          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed" style={{ borderColor: '#94A3B8' }}>
-            <p className="text-xl font-semibold" style={{ color: '#94A3B8' }}>No hay registros para mostrar</p>
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-xl font-semibold" style={{ color: 'var(--muted)' }}>No hay registros para mostrar</p>
           </div>
         )}
 
-        <section className="mt-8 rounded-2xl border bg-white p-6 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+        <section className="mt-8 rounded-2xl border bg-white p-6 shadow-sm" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold" style={{ color: '#1F2A44' }}>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
                 {isAdmin ? 'Solicitudes de productos (clientes)' : 'Mis solicitudes de productos'}
               </h2>
-              <p className="text-sm mt-1" style={{ color: '#64748B' }}>
+              <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
                 Seguimiento del flujo de aprobación de productos.
               </p>
             </div>
@@ -255,12 +234,12 @@ export default function ProductPage() {
           </div>
 
           {requestsLoading ? (
-            <p className="mt-4 text-sm" style={{ color: '#64748B' }}>Cargando solicitudes...</p>
+            <p className="mt-4 text-sm" style={{ color: 'var(--muted)' }}>Cargando solicitudes...</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr style={{ color: '#64748B' }}>
+                  <tr style={{ color: 'var(--muted)' }}>
                     <th className="text-left py-2 pr-4">Producto</th>
                     <th className="text-left py-2 pr-4">Cliente</th>
                     <th className="text-left py-2 pr-4">Estado</th>
@@ -273,11 +252,11 @@ export default function ProductPage() {
                   {(isAdmin ? allRequests : myRequests).map((item) => {
                     const badge = statusBadge(item.status)
                     return (
-                      <tr key={item._id} className="border-t" style={{ borderColor: '#E2E8F0' }}>
-                        <td className="py-3 pr-4 font-semibold" style={{ color: '#1F2A44' }}>
+                      <tr key={item._id} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                        <td className="py-3 pr-4 font-semibold" style={{ color: 'var(--text)' }}>
                           {item.product_id?.name || 'Producto'}
                         </td>
-                        <td className="py-3 pr-4" style={{ color: '#475569' }}>
+                        <td className="py-3 pr-4" style={{ color: 'var(--muted)' }}>
                           <span className="font-mono text-xs px-2 py-0.5 rounded bg-gray-50">
                             {String(item.user_id || '').slice(-8).toUpperCase() || '—'}
                           </span>
@@ -287,10 +266,10 @@ export default function ProductPage() {
                             {item.status}
                           </span>
                         </td>
-                        <td className="py-3 pr-4" style={{ color: '#475569' }}>
+                        <td className="py-3 pr-4" style={{ color: 'var(--muted)' }}>
                           {item.notes || item.admin_notes || '—'}
                         </td>
-                        <td className="py-3 pr-4" style={{ color: '#475569' }}>
+                        <td className="py-3 pr-4" style={{ color: 'var(--muted)' }}>
                           {new Date(item.createdAt).toLocaleString('es-GT')}
                         </td>
                         {isAdmin ? (
@@ -317,7 +296,7 @@ export default function ProductPage() {
                                 </button>
                               </div>
                             ) : (
-                              <span style={{ color: '#94A3B8' }}>Gestionada</span>
+                              <span style={{ color: 'var(--muted)' }}>Gestionada</span>
                             )}
                           </td>
                         ) : null}
@@ -326,7 +305,7 @@ export default function ProductPage() {
                   })}
                   {(isAdmin ? allRequests : myRequests).length === 0 ? (
                     <tr>
-                      <td colSpan={isAdmin ? 6 : 5} className="py-6 text-center" style={{ color: '#94A3B8' }}>
+                      <td colSpan={isAdmin ? 6 : 5} className="py-6 text-center" style={{ color: 'var(--muted)' }}>
                         No hay solicitudes registradas.
                       </td>
                     </tr>
@@ -342,15 +321,15 @@ export default function ProductPage() {
         <div className="fixed inset-0 bg-[#1F2A44]/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: '#F1F5F9' }}>
-              <h3 className="text-xl font-bold" style={{ color: '#1F2A44' }}>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
                 Solicitar producto
               </h3>
-              <button type="button" onClick={handleCloseRequestModal} style={{ color: '#94A3B8' }}>
+              <button type="button" onClick={handleCloseRequestModal} style={{ color: 'var(--muted)' }}>
                 ✕
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm" style={{ color: '#475569' }}>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>
                 Producto seleccionado: <span className="font-semibold">{requestingProduct?.name}</span>
               </p>
               <textarea
@@ -359,7 +338,7 @@ export default function ProductPage() {
                 rows={4}
                 maxLength={500}
                 className="w-full rounded-xl border px-3 py-2"
-                style={{ borderColor: '#CBD5E1' }}
+                style={{ borderColor: 'var(--border)' }}
                 placeholder="Motivo o comentario para tu solicitud (opcional)"
               />
               <div className="flex gap-3">
@@ -374,7 +353,7 @@ export default function ProductPage() {
                 <button
                   type="button"
                   className="flex-1 px-4 py-2 rounded-xl text-white font-semibold"
-                  style={{ backgroundColor: '#2C4A7A' }}
+                  style={{ backgroundColor: 'var(--primary)' }}
                   onClick={submitRequest}
                   disabled={requestingId === requestingProduct?._id}
                 >

@@ -1,35 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { ArrowRight, Trash2 } from 'lucide-react'
 import { getUsers } from '../../user/service/userService'
-import {
-  getFavorites,
-  addFavorite,
-  removeFavorite,
-  updateFavoriteAlias,
-} from '../service/favoriteService'
+import { useFavorites } from '../hooks/useFavorites'
 import useAuthStore from '../../auth/store/useAuthStore'
 import { isAdminUser } from '../../../shared/auth/roles'
-
-function IconStar() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        d="M10.868 2.53a.75.75 0 00-1.736 0l-1.264 3.88a.75.75 0 01-.564.52l-4.03.585a.75.75 0 00-.416 1.279l2.916 2.843a.75.75 0 01.216.664l-.687 4.006a.75.75 0 001.088.791L10 13.347l3.594 1.888a.75.75 0 001.088-.79l-.687-4.005a.75.75 0 01.216-.665l2.916-2.843a.75.75 0 00-.416-1.28l-4.03-.585a.75.75 0 01-.564-.52L10.868 2.53z"
-        clipRule="evenodd"
-      />
-    </svg>
-  )
-}
-
-function IconArrowRight() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path d="M3 10.5a.75.75 0 01.75-.75h9.69l-3.22-3.219a.75.75 0 111.06-1.061l4.5 4.5a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 11-1.06-1.06L13.44 11.25H3.75A.75.75 0 013 10.5z" />
-    </svg>
-  )
-}
 
 function getOwnerAccountFromUser(person) {
   if (!person) return ''
@@ -52,10 +28,17 @@ export default function FavoritePage() {
   const currentUser = useAuthStore((state) => state.user)
   const isAdmin = isAdminUser(currentUser)
 
-  const [favorites, setFavorites] = useState([])
-  const [loading, setLoading] = useState(true)
+  const {
+    favorites,
+    loading: favoritesLoading,
+    refresh: loadFavorites,
+    addFavorite,
+    removeFavorite,
+    updateFavoriteAlias,
+  } = useFavorites({ autoLoad: true })
+  const [peopleLoading, setPeopleLoading] = useState(true)
+  const loading = favoritesLoading || peopleLoading
   const [actionLoading, setActionLoading] = useState(false)
-  const [error, setError] = useState(null)
 
   const [aliasInput, setAliasInput] = useState('')
   const [accountInput, setAccountInput] = useState('')
@@ -68,16 +51,6 @@ export default function FavoritePage() {
 
   const [editingId, setEditingId] = useState(null)
   const [editingAlias, setEditingAlias] = useState('')
-
-  const loadFavorites = async () => {
-    setError(null)
-    const result = await getFavorites()
-    if (result.success) {
-      setFavorites(result.data)
-    } else {
-      setError(result.error)
-    }
-  }
 
   const loadPeople = async (search = '') => {
     if (!isAdmin) {
@@ -96,15 +69,13 @@ export default function FavoritePage() {
   }
 
   useEffect(() => {
-    const loadAll = async () => {
-      setLoading(true)
-      await loadFavorites()
+    const timer = window.setTimeout(async () => {
       if (isAdmin) {
         await loadPeople('')
       }
-      setLoading(false)
-    }
-    void loadAll()
+      setPeopleLoading(false)
+    }, 0)
+    return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin])
 
@@ -120,7 +91,6 @@ export default function FavoritePage() {
     toast.success('Favorito agregado correctamente')
     setAliasInput('')
     setAccountInput('')
-    await loadFavorites()
   }
 
   const handleAddFromDirectory = async (person) => {
@@ -138,7 +108,6 @@ export default function FavoritePage() {
       return
     }
     toast.success('Favorito agregado correctamente')
-    await loadFavorites()
   }
 
   const handleRemove = async (favorite) => {
@@ -154,7 +123,6 @@ export default function FavoritePage() {
       return
     }
     toast.success('Favorito eliminado')
-    await loadFavorites()
   }
 
   const startEdit = (favorite) => {
@@ -182,7 +150,6 @@ export default function FavoritePage() {
     toast.success('Alias actualizado')
     setEditingId(null)
     setEditingAlias('')
-    await loadFavorites()
   }
 
   const handleSearch = async (event) => {
@@ -208,12 +175,6 @@ export default function FavoritePage() {
           Favoritos guardados: <strong>{favorites.length}</strong>
         </div>
       </div>
-
-      {error && (
-        <div className="mb-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
 
       <section className="mb-8 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="mb-4 flex flex-col gap-1">
@@ -301,11 +262,12 @@ export default function FavoritePage() {
                   <button
                     type="button"
                     aria-label="Eliminar favorito"
-                    className="rounded-full bg-yellow-100 p-2 text-yellow-600 transition hover:bg-yellow-200"
+                    title="Eliminar favorito"
+                    className="rounded-full border border-[var(--border)] bg-white p-2 text-[var(--muted)] transition hover:border-[var(--danger)] hover:text-[var(--danger)] disabled:opacity-50"
                     onClick={() => handleRemove(favorite)}
                     disabled={actionLoading}
                   >
-                    <IconStar />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -342,7 +304,7 @@ export default function FavoritePage() {
                         disabled={actionLoading}
                         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--success)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                       >
-                        <IconArrowRight />
+                        <ArrowRight className="h-4 w-4" />
                         Enviar dinero
                       </button>
                     </>

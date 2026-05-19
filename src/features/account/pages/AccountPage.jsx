@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/useAuthStore'
 import { accountService } from '../service'
+import { useMyAccounts } from '../hooks/useMyAccounts'
 import AccountFormModal from '../components/AccountFormModal'
 import AccountDetailModal from '../components/AccountDetailModal'
 import { getUsers } from '../../user/service/userService'
@@ -38,10 +39,13 @@ export default function AccountPage() {
   const user = useAuthStore((state) => state.user)
   const isAdmin = useMemo(() => isAdminUser(user), [user])
 
-  const [myAccounts, setMyAccounts] = useState([])
-  const [accountSummary, setAccountSummary] = useState(null)
-  const [myLoading, setMyLoading] = useState(true)
-  const [myInfoLoading, setMyInfoLoading] = useState(true)
+  const {
+    accounts: myAccounts,
+    summary: accountSummary,
+    loading: myLoading,
+    summaryLoading: myInfoLoading,
+    reloadAccounts: loadMyAccounts,
+  } = useMyAccounts({ autoLoad: true, limit: 50 })
 
   const [adminAccounts, setAdminAccounts] = useState([])
   const [adminTotal, setAdminTotal] = useState(0)
@@ -68,38 +72,6 @@ export default function AccountPage() {
 
   const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'mine')
 
-  const loadMyAccounts = async () => {
-    setMyLoading(true)
-    try {
-      const result = await accountService.getMyAccounts({ limit: 50 })
-      if (result.success) {
-        setMyAccounts(result.data.items)
-      } else {
-        toast.error(result.error)
-      }
-    } catch {
-      toast.error('Error al consultar mis cuentas')
-    } finally {
-      setMyLoading(false)
-    }
-  }
-
-  const loadMyInfo = async () => {
-    setMyInfoLoading(true)
-    try {
-      const result = await accountService.getMyInfo()
-      if (result.success) {
-        setAccountSummary(result.data.summary)
-      } else {
-        toast.error(result.error)
-      }
-    } catch {
-      toast.error('Error al cargar mi información')
-    } finally {
-      setMyInfoLoading(false)
-    }
-  }
-
   const loadAdminAccounts = async () => {
     if (!isAdmin) return
     setAdminLoading(true)
@@ -125,13 +97,8 @@ export default function AccountPage() {
     }
   }
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadMyAccounts()
-      loadMyInfo()
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [])
+  // El hook useMyAccounts ya gestiona la carga inicial; aquí solo dejamos el
+  // efecto del admin para paginación/filtros.
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
