@@ -218,13 +218,15 @@ export default function TransactionPage() {
         >
           Historial
         </button>
-        <button
-          onClick={() => setActiveTab('deposit')}
-          className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'deposit' ? 'text-white' : 'text-[var(--text)]'}`}
-          style={{ background: activeTab === 'deposit' ? 'var(--primary)' : 'transparent' }}
-        >
-          Crear Depósito
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('deposit')}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'deposit' ? 'text-white' : 'text-[var(--text)]'}`}
+            style={{ background: activeTab === 'deposit' ? 'var(--primary)' : 'transparent' }}
+          >
+            Crear Depósito
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('transfer')}
           className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'transfer' ? 'text-white' : 'text-[var(--text)]'}`}
@@ -406,8 +408,8 @@ export default function TransactionPage() {
           </div>
         )}
 
-        {/* Deposit Tab */}
-        {activeTab === 'deposit' && <DepositForm onSuccess={handleOperationSuccess} />}
+        {/* Deposit Tab — solo visible para admin (ventanilla) */}
+        {activeTab === 'deposit' && isAdmin && <DepositForm onSuccess={handleOperationSuccess} />}
 
         {/* Transfer Tab */}
         {activeTab === 'transfer' && (
