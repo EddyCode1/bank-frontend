@@ -2,18 +2,15 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import useAuthStore from '../store/useAuthStore'
 import { authService } from '../service/authService'
 import fondoRelieve from '../../../assets/LoginImage.png'
 
 /**
- * Página de Login con layout split-screen:
- *  - Panel izquierdo: identidad visual y propuesta de valor.
- *  - Panel derecho: tarjeta minimalista con el formulario.
- *
- * El acceso a flujos secundarios (registro, verificación, reenvío) se ofrece como
- * microlinks de texto para no saturar la pantalla principal de ingreso.
+ * Página de Login con card centrada sobre el fondo de quetzales en relieve.
+ * El card es minimalista: inputs con icono interno, ojo para mostrar/ocultar
+ * contraseña y microlinks para registro, recuperación, verificación y reenvío.
  */
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -39,55 +36,22 @@ const LoginPage = () => {
   }
 
   return (
-    <section className="grid min-h-[calc(100vh-72px)] grid-cols-1 lg:grid-cols-2">
-      {/* Panel izquierdo: branding + propuesta de valor */}
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0f2744] via-[#1e3a5f] to-[#2d5a8c] lg:flex lg:items-center lg:justify-center">
-        <img
-          src={fondoRelieve}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-15 mix-blend-luminosity"
-        />
-        <div className="pointer-events-none absolute -left-32 top-10 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-amber-300/10 blur-3xl" />
+    <section className="relative flex min-h-[calc(100vh-72px)] items-center justify-center overflow-hidden bg-slate-100 px-4 py-10">
+      <img
+        src={fondoRelieve}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
+      />
 
-        <div className="relative z-10 max-w-md px-12 text-white">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] backdrop-blur">
-            Banca digital
-          </span>
-          <h2 className="mt-6 text-4xl font-bold leading-tight">
-            Tu banco, simple<br />y siempre contigo.
-          </h2>
-          <p className="mt-4 text-base text-white/80">
-            Consulta saldos, transfiere entre cuentas y paga servicios desde una sola plataforma diseñada para ti.
-          </p>
-
-          <ul className="mt-8 space-y-3 text-sm text-white/85">
-            <li className="flex items-start gap-3">
-              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-cyan-300" />
-              <span>Cifrado de extremo a extremo y verificación multifactor.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-cyan-300" />
-              <span>Disponible 24/7 desde cualquier dispositivo.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-cyan-300" />
-              <span>Soporte humano cuando lo necesitas.</span>
-            </li>
-          </ul>
-        </div>
-      </aside>
-
-      {/* Panel derecho: formulario compacto */}
-      <div className="flex items-center justify-center bg-slate-50 px-4 py-12 sm:px-8">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center lg:text-left">
+      <div className="relative z-10 w-full max-w-sm">
+        <div className="rounded-2xl border border-white/60 bg-white/95 p-8 shadow-[0_20px_60px_-20px_rgba(15,39,68,0.25)] backdrop-blur-sm">
+          <div className="mb-7 text-center">
             <span className="inline-block rounded-full bg-[#2d5a8c]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2d5a8c]">
               Banco del Quetzal
             </span>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">Inicia sesión</h1>
-            <p className="mt-2 text-sm text-slate-500">Accede a tu banca digital.</p>
+            <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">Inicia sesión</h1>
+            <p className="mt-1.5 text-sm text-slate-500">Accede a tu banca digital.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -156,14 +120,14 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500 lg:text-left">
+          <p className="mt-6 text-center text-xs text-slate-500">
             ¿Aún no tienes cuenta?{' '}
             <Link to="/register" className="font-semibold text-[#2d5a8c] hover:underline">
               Regístrate
             </Link>
           </p>
 
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400 lg:justify-start">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
             <Link to="/verify-email" className="hover:text-[#2d5a8c] hover:underline">
               Verificar correo
             </Link>
