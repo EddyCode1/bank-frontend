@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { dispatchAppEvent, subscribeAppEvent } from '../../../shared/events/platformEvents'
 import {
   getFavorites,
   addFavorite as addFavoriteService,
@@ -32,7 +33,7 @@ export function useFavorites({ autoLoad = true } = {}) {
   }, [])
 
   const broadcast = useCallback(() => {
-    window.dispatchEvent(new Event(FAVORITES_UPDATED_EVENT))
+    dispatchAppEvent(FAVORITES_UPDATED_EVENT)
   }, [])
 
   const add = useCallback(async ({ alias, accountNumber }) => {
@@ -80,8 +81,8 @@ export function useFavorites({ autoLoad = true } = {}) {
     const handler = () => {
       void load()
     }
-    window.addEventListener(FAVORITES_UPDATED_EVENT, handler)
-    return () => window.removeEventListener(FAVORITES_UPDATED_EVENT, handler)
+    const unsub = subscribeAppEvent(FAVORITES_UPDATED_EVENT, handler)
+    return () => unsub()
   }, [autoLoad, load])
 
   return {

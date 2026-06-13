@@ -1,5 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
+import { attachTokenRefreshInterceptor } from './tokenRefresh'
 import { handleSessionError } from './sessionErrorHandler'
 
 const apiBase = (import.meta.env.VITE_API_BASE || 'http://localhost:5025/api/v1').replace(/\/$/, '')
@@ -27,7 +28,7 @@ export const bankingClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-/** Interceptor compartido para agregar token y manejar 401 */
+/** Interceptor compartido para agregar token, renovar sesión y manejar errores */
 function attachInterceptors(client) {
   client.interceptors.request.use(
     (config) => {
@@ -46,10 +47,14 @@ function attachInterceptors(client) {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      handleSessionError(error)
+      if (!error.config?._retry) {
+        handleSessionError(error)
+      }
       return Promise.reject(error)
     }
   )
+
+  attachTokenRefreshInterceptor(client)
 }
 
 attachInterceptors(adminClient)

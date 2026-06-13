@@ -1,5 +1,6 @@
 import axios from 'axios'
 import useAuthStore from '../../features/auth/store/useAuthStore'
+import { attachTokenRefreshInterceptor } from './tokenRefresh'
 import { handleSessionError } from './sessionErrorHandler'
 
 const authClient = axios.create({
@@ -21,9 +22,13 @@ authClient.interceptors.request.use(
 authClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    handleSessionError(error)
+    if (!error.config?._retry) {
+      handleSessionError(error)
+    }
     return Promise.reject(error)
   }
 )
+
+attachTokenRefreshInterceptor(authClient)
 
 export default authClient

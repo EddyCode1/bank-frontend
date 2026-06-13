@@ -34,7 +34,7 @@ export function handleSessionError(error) {
 
   if (shouldLogout) {
     useAuthStore.getState().logout()
-    toast.error('Tu sesión expiró. Inicia sesión nuevamente.')
+    toast.error('Tu sesión expiró por seguridad. Inicia sesión de nuevo.')
     hardRedirect('/login')
     return
   }
