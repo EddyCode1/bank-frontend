@@ -1,148 +1,124 @@
 @import 'tailwindcss';
 
-/* Paleta Banco del Quetzal — confianza (azules), crecimiento (verdes), energía controlada (naranjas) */
+/* Importar tipografías profesionales */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Public+Sans:wght@400;600;700&display=swap');
+
+/* Paleta y tokens — estilo bancario profesional */
 :root {
-  --azul-profundo: #1f2a44;
-  --azul-medio: #2c4a7a;
+  --azul-profundo: #0f2740;
+  --azul-medio: #174a78;
   --azul-vibrante: #2f7fbf;
   --verde-jade: #1fa187;
   --verde-medio: #2cb67d;
-  --verde-claro: #7ed7c1;
   --naranja-principal: #f97316;
-  --naranja-rojizo: #ef4444;
-  --coral-suave: #fb7185;
   --blanco-puro: #ffffff;
-  --gris-claro-fondo: #f5f7fa;
-  --gris-medio: #94a3b8;
-  --gris-oscuro-texto: #1e293b;
+  --gris-fondo: #f6f8fb;
+  --gris-100: #f1f5f9;
+  --gris-200: #e2e8f0;
+  --gris-400: #94a3b8;
+  --gris-600: #475569;
+  --texto: #0f1724;
 
-  /* Tokens semánticos (layout existente) */
+  /* Semánticos */
   --primary: var(--azul-medio);
   --primary-dark: var(--azul-profundo);
-  --primary-light: var(--azul-vibrante);
-  --secondary: var(--verde-jade);
   --accent: var(--naranja-principal);
-  --bg: var(--gris-claro-fondo);
+  --bg: var(--gris-fondo);
   --surface: var(--blanco-puro);
-  --border: #e2e8f0;
-  --text: var(--gris-oscuro-texto);
-  --muted: var(--gris-medio);
+  --border: var(--gris-200);
+  --muted: var(--gris-400);
   --success: var(--verde-medio);
-  --danger: var(--naranja-rojizo);
-  --warning: var(--coral-suave);
-  /* Hero / destacados: azul institucional → azul vibrante */
-  --ai-gradient-start: var(--azul-medio);
-  --ai-gradient-end: var(--azul-vibrante);
 }
 
-/* Estilos globales personalizados */
-
-* {
-  @apply antialiased;
-}
-
+/* Base tipográfica y layouts */
+* { @apply antialiased; }
+html, body, #root { height: 100%; }
 body {
+  font-family: 'Inter', 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   background: var(--bg);
-  color: var(--text);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+html { scroll-behavior: smooth; }
 
-html {
-  scroll-behavior: smooth;
-}
+/* Scrollbar discreto */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg,var(--gris-400),var(--muted)); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-/* Scrollbar personalizado */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--gris-claro-fondo);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gris-medio);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--azul-medio);
-}
+/* Transiciones suaves globales */
+* { transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 
 /* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+.fade-in { animation: fadeInUp 320ms ease both; }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+@keyframes subtlePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+  100% { transform: scale(1); }
 }
+.pulse-soft { animation: subtlePulse 3s ease-in-out infinite; }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px);
-  }
-  50% {
-    transform: translateY(-10px) translateX(4px);
-  }
-}
+/* View transition wrapper (usado en MainLayout) */
+.page-transition { opacity: 0; transform: translateY(6px); animation: fadeInUp 360ms ease forwards; }
 
-.animate-float {
-  animation: float 7s ease-in-out infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-
-/* Utilities personalizadas */
-.glass-morphism {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(4px);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.btn-primary {
-  @apply px-4 py-2 text-white rounded-lg font-semibold transition;
-  background: var(--primary);
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn-secondary {
-  @apply px-4 py-2 rounded-lg font-semibold transition;
-  background: var(--secondary);
-  color: #ffffff;
-}
-
-.btn-secondary:hover {
-  background: var(--verde-medio);
-}
-
-.input-base {
-  @apply w-full px-4 py-2 rounded-lg outline-none;
-  border: 1px solid var(--border);
-  background: var(--blanco-puro);
-}
-
-.input-base:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(44, 74, 122, 0.18);
-}
-
+/* Glass cards y superficies */
 .card {
-  @apply rounded-lg shadow p-6;
+  @apply rounded-xl p-6;
   background: var(--surface);
   border: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(18, 36, 56, 0.06);
 }
+.card-quiet { @apply bg-white/60; backdrop-filter: blur(6px); }
+
+/* Buttons: estilo primario y secundario con microinteracciones */
+.btn-primary { @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-semibold text-white shadow-sm; background: linear-gradient(180deg,var(--primary),var(--primary-dark)); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(23,74,120,0.12); }
+.btn-ghost { @apply px-3 py-2 rounded-md text-sm font-medium border; background: transparent; border-color: transparent; }
+.btn-outline { @apply px-4 py-2 rounded-lg font-semibold border; border-color: var(--border); background: transparent; }
+
+/* Inputs y formularios */
+.input-base { @apply w-full px-4 py-2 rounded-lg bg-white border text-sm; border: 1px solid var(--border); }
+.input-base:focus { outline: none; box-shadow: 0 6px 20px rgba(23,74,120,0.08); border-color: var(--primary); }
+.field-label { @apply text-sm font-medium text-gray-700 mb-1; }
+
+/* Tables: filas limpias y legibles */
+.table { width: 100%; border-collapse: collapse; }
+.table th { @apply text-left text-sm font-semibold text-gray-600 pb-2; border-bottom: 1px solid var(--border); }
+.table td { @apply py-3 text-sm text-gray-700; border-bottom: 1px solid var(--gris-100); }
+.table tr:hover td { background: linear-gradient(90deg, rgba(47,127,191,0.03), rgba(47,127,191,0.02)); }
+
+/* Card hover ligero para enfatizar información sin distraer */
+.card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,39,64,0.08); }
+
+/* Avatar pequeño */
+.avatar-sm { width: 36px; height: 36px; border-radius: 9999px; object-fit: cover; }
+
+/* Skeleton / loader discreto */
+.skeleton { background: linear-gradient(90deg, #f3f4f6 0%, #e9eef5 50%, #f3f4f6 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+.spinner { border: 4px solid rgba(0,0,0,0.06); border-top-color: var(--primary); border-radius: 9999px; width: 28px; height: 28px; animation: spin 800ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Utilities responsivas */
+@media (max-width: 768px) {
+  .card { padding: 1rem; }
+  .page-transition { padding: 0.25rem; }
+}
+
+/* Helper pequeño para badges y chips */
+.badge { @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold; background: #f1f5f9; color: var(--gris-600); }
+
+/* Accessibility helpers */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Exponer tokens para uso en componentes tailwind via var() */
+.bg-primary { background-color: var(--primary); }
+.text-primary { color: var(--primary); }
+
