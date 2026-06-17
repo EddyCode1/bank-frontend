@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { financialService } from '../service/financialService'
-import html2canvas from 'html2canvas-pro'
 import { jsPDF } from 'jspdf'
 import { CREDIT_CARDS, LOANS, TRANSACTION_FILTER_OPTIONS } from '../constants/financialData'
 import slimCard from '../../../assets/slim-card.png'
@@ -84,71 +83,98 @@ export default function FinancialPage() {
 
   const summary = useMemo(() => buildDashboardSummary(creditCards, loans), [creditCards, loans])
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = () => {
     try {
-      const element = document.getElementById('financial-export-area')
-      if (!element) return
-
-      window.scrollTo(0, 0)
-      await new Promise(resolve => setTimeout(resolve, 300))
-
-      const scale = 1.2
-      const canvas = await html2canvas(element, {
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        imageTimeout: 5000,
-      })
-
-      const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
-
-      const pxPerMm = (96 / 25.4) * scale
-      const pageHeightPx = Math.floor(pdfHeight * pxPerMm)
-
-      const totalHeightPx = canvas.height
-      let renderedHeight = 0
-      let pageCount = 0
-
-      while (renderedHeight < totalHeightPx) {
-        const fragmentHeight = Math.min(pageHeightPx, totalHeightPx - renderedHeight)
-        const fragment = document.createElement('canvas')
-        fragment.width = canvas.width
-        fragment.height = fragmentHeight
-        const ctx = fragment.getContext('2d')
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, fragment.width, fragment.height)
-        ctx.drawImage(canvas, 0, renderedHeight, canvas.width, fragmentHeight, 0, 0, fragment.width, fragmentHeight)
-
-        const imgData = fragment.toDataURL('image/png')
-        const imgHeightMm = fragment.height / pxPerMm
-
-        if (pageCount > 0) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeightMm)
-
-        renderedHeight += fragmentHeight
-        pageCount += 1
+      if (!history || history.length === 0) {
+        alert('No hay datos para exportar')
+        return
       }
 
-      pdf.save('saldos.pdf')
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      let yPosition = 20
+
+      // Título
+      doc.setFontSize(16)
+      doc.setTextColor(0, 0, 0)
+      doc.text('Historial de Movimientos', pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 15
+
+      // Configurar tabla
+      const columns = ['Fecha', 'Descripción', 'Tipo', 'Monto', 'Moneda', 'Estado']
+      const columnWidths = [25, 55, 22, 25, 20, 25]
+      const rowHeight = 8
+      const headerHeight = 10
+      let tableY = yPosition
+
+      // Dibujar encabezado
+      doc.setFillColor(41, 128, 185)
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'bold')
+
+      let xPosition = 10
+      columns.forEach((col, i) => {
+        doc.rect(xPosition, tableY, columnWidths[i], headerHeight, 'F')
+        doc.text(col, xPosition + 2, tableY + 7)
+        xPosition += columnWidths[i]
+      })
+
+      tableY += headerHeight
+
+      // Dibujar filas
+      doc.setTextColor(0, 0, 0)
+      doc.setFont(undefined, 'normal')
+      doc.setFontSize(9)
+
+      history.forEach((item, index) => {
+        // Cambiar color de fondo cada dos filas
+        if (index % 2 === 0) {
+          doc.setFillColor(240, 240, 240)
+          doc.rect(10, tableY, pageWidth - 20, rowHeight, 'F')
+        }
+
+        // Dibujar bordes
+        doc.setDrawColor(200, 200, 200)
+        xPosition = 10
+        const rowData = [
+          item.date || item.fecha || '',
+          item.description || item.descripcion || '',
+          item.type || item.tipo || '',
+          item.amount || item.monto || '',
+          item.currency || item.moneda || '',
+          item.status || item.estado || '',
+        ]
+
+        rowData.forEach((data, i) => {
+          doc.rect(xPosition, tableY, columnWidths[i], rowHeight)
+          doc.text(String(data).substring(0, 15), xPosition + 2, tableY + 6)
+          xPosition += columnWidths[i]
+        })
+
+        tableY += rowHeight
+
+        // Verificar si necesita nueva página
+        if (tableY > pageHeight - 20) {
+          doc.addPage()
+          tableY = 20
+        }
+      })
+
+      doc.save('historial_movimientos.pdf')
     } catch (err) {
-      console.error('Error exportando PDF:', err instanceof Error ? err.message : err)
-      alert('No fue posible exportar el PDF. Revisa la consola para más detalles.')
+      console.error('Error exportando PDF:', err)
+      alert('No fue posible exportar el PDF. Error: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
   return (
-    <div id="financial-export-area" className="financial-page">
+    <div className="financial-page">
       <div className="financial-header">
         <div className="financial-header-left">
           <h1>Consulta de Saldo e Historial</h1>
           <p>Accede a tu información de tarjetas de crédito y préstamos con un diseño pensado para experiencia bancaria enterprise.</p>
-        </div>
-        <div className="financial-header-right">
-          <img src={slimCard} alt="Tarjeta ejemplo" className="financial-hero-image" />
         </div>
         <div className="financial-actions">
           <button className="export-button" type="button" onClick={handleExportPdf}>
@@ -157,102 +183,19 @@ export default function FinancialPage() {
         </div>
       </div>
 
-      <div className="financial-summary-grid">
-        {loading ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600">
-            Cargando saldos...
-          </div>
-        ) : (
-          summary.map((item) => (
-            <FinancialSummaryCard key={item.title} {...item} />
-          ))
-        )}
-      </div>
-
       <div className="financial-grid-2">
         <section className="financial-section">
-          <h2 className="section-title">Tarjetas de Crédito</h2>
-          <div className="financial-card-sample-wrap">
-            <img src={slimCard} alt="Vista móvil tarjeta" className="financial-card-sample" />
-          </div>
-          <div className="financial-cards-list">
-            {creditCards.map((card) => (
-              <div key={card.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{card.name}</h3>
-                    <p className="text-sm text-slate-600">{card.type} · {card.currency} · {card.status}</p>
-                  </div>
-                  <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">{card.status}</span>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Límite autorizado</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(card.authorizedLimit, card.currency)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Saldo pendiente</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(card.balanceDue, card.currency)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Saldo disponible</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(card.availableBalance, card.currency)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Pago mínimo</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(card.minimumPayment, card.currency)}</p>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <span className="text-sm text-slate-600">Fecha corte: {card.cutOffDate}</span>
-                  <span className="text-sm text-slate-600">Fecha pago: {card.paymentDueDate}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="financial-section">
-          <h2 className="section-title">Préstamos</h2>
-          <div className="financial-loans-list">
-            {loans.map((loan) => (
-              <div key={loan.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{loan.name}</h3>
-                    <p className="text-sm text-slate-600">{loan.type} · {loan.status}</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">{loan.status}</span>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Monto original</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(loan.principalAmount)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Saldo pendiente</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(loan.outstandingBalance)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Tasa</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{loan.interestRate}%</p>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Cuota mensual</span>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(loan.monthlyInstallment)}</p>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <span className="text-sm text-slate-600">Próximo pago: {loan.nextPaymentDate}</span>
-                  <span className="text-sm text-slate-600">Plazo restante: {loan.termRemaining}</span>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50 py-16 px-6">
+            <div className="mb-4 text-6xl">🔧</div>
+            <h2 className="mb-2 text-center text-2xl font-bold text-slate-900">Próximamente: Créditos y Préstamos</h2>
+            <p className="max-w-md text-center text-slate-600">
+              Aquí podrás consultar el estado de tus tarjetas de crédito y préstamos activos. Esta sección estará disponible en la próxima versión.
+            </p>
           </div>
         </section>
       </div>
 
-      <section className="financial-section">
+      <section id="financial-export-area" className="financial-section">
         <h2 className="section-title">Historial de movimientos</h2>
         <FinancialFilters filters={filters} onChange={setFilters} />
         <div className="mt-4 flex flex-col gap-4">
