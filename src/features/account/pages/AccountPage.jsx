@@ -5,6 +5,7 @@ import { accountService } from '../service'
 import { useMyAccounts } from '../hooks/useMyAccounts'
 import AccountFormModal from '../components/AccountFormModal'
 import AccountDetailModal from '../components/AccountDetailModal'
+import ConfirmModal from '../../../shared/components/ConfirmModal'
 import { getUsers } from '../../user/service/userService'
 import { isAdminUser } from '../../../shared/auth/roles'
 
@@ -71,6 +72,11 @@ export default function AccountPage() {
   const [formError, setFormError] = useState(null)
 
   const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'mine')
+
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const loadAdminAccounts = async () => {
     if (!isAdmin) return
@@ -465,10 +471,31 @@ export default function AccountPage() {
           handleEditAccount(account)
           setDetailOpen(false)
         }}
-        onStatusChange={handleAccountStatusChange}
+        onStatusChange={(account, nextStatus) => {
+          setConfirmTitle(nextStatus === 'active' ? 'Activar cuenta' : 'Desactivar cuenta')
+          setConfirmMessage(
+            `Esta acción ${nextStatus === 'active' ? 'activará' : 'bloqueará'} la cuenta ${account?.accountNumber || account?.id}. ¿Estás seguro?`
+          )
+          setConfirmAction(() => async () => {
+            setConfirmOpen(false)
+            await handleAccountStatusChange(account, nextStatus)
+          })
+          setConfirmOpen(true)
+        }}
         transactions={detailTransactions}
         transactionsLoading={detailLoading}
         error={detailError}
+      />
+
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => { if (typeof confirmAction === 'function') confirmAction() }}
+        cancelLabel="Cancelar"
+        confirmLabel="Confirmar"
+        danger={true}
       />
     </div>
   )

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowRight, Trash2 } from 'lucide-react'
 import { getUsers } from '../../user/service/userService'
+import ConfirmModal from '../../../shared/components/ConfirmModal'
 import { useFavorites } from '../hooks/useFavorites'
 import useAuthStore from '../../auth/store/useAuthStore'
 import { isAdminUser } from '../../../shared/auth/roles'
@@ -51,6 +52,10 @@ export default function FavoritePage() {
 
   const [editingId, setEditingId] = useState(null)
   const [editingAlias, setEditingAlias] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const loadPeople = async (search = '') => {
     if (!isAdmin) {
@@ -111,18 +116,20 @@ export default function FavoritePage() {
   }
 
   const handleRemove = async (favorite) => {
-    const confirmed = window.confirm(
-      `¿Eliminar "${favorite.alias}" (cuenta ${favorite.accountNumber}) de tus favoritos?`
-    )
-    if (!confirmed) return
-    setActionLoading(true)
-    const result = await removeFavorite(favorite.id)
-    setActionLoading(false)
-    if (!result.success) {
-      toast.error(result.error || 'No se pudo eliminar el favorito')
-      return
-    }
-    toast.success('Favorito eliminado')
+    setConfirmTitle('Eliminar favorito')
+    setConfirmMessage(`¿Eliminar "${favorite.alias}" (cuenta ${favorite.accountNumber}) de tus favoritos?`)
+    setConfirmAction(() => async () => {
+      setConfirmOpen(false)
+      setActionLoading(true)
+      const result = await removeFavorite(favorite.id)
+      setActionLoading(false)
+      if (!result.success) {
+        toast.error(result.error || 'No se pudo eliminar el favorito')
+        return
+      }
+      toast.success('Favorito eliminado')
+    })
+    setConfirmOpen(true)
   }
 
   const startEdit = (favorite) => {
@@ -412,6 +419,18 @@ export default function FavoritePage() {
           )}
         </section>
       ) : null}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          if (typeof confirmAction === 'function') confirmAction()
+        }}
+        cancelLabel="Cancelar"
+        confirmLabel="Eliminar"
+        danger={true}
+      />
     </div>
   )
 }

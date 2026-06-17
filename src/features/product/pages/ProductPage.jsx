@@ -7,6 +7,7 @@ import useProductStore from '../store/useProductStore'
 import { useProductRequests } from '../hooks/useProductRequests'
 import { isAdminUser } from '../../../shared/auth/roles'
 import { bankingClient } from '../../../shared/api/adminClient'
+import ConfirmModal from '../../../shared/components/ConfirmModal'
 
 function resolveApiError(error, fallback) {
   return error?.response?.data?.message || error?.response?.data?.error || fallback
@@ -26,6 +27,10 @@ export default function ProductPage() {
   const [requestNotes, setRequestNotes] = useState('')
   const [requestingId, setRequestingId] = useState(null)
   const [statusUpdatingId, setStatusUpdatingId] = useState(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const user = useAuthStore((state) => state.user)
   const isAdmin = isAdminUser(user)
@@ -66,14 +71,16 @@ export default function ProductPage() {
   const handleDelete = async (productId) => {
     const target = products.find((p) => p._id === productId)
     const name = target?.name || 'este producto'
-    const confirmed = window.confirm(
-      `¿Eliminar definitivamente "${name}"? Si solo necesitas dejar de ofrecerlo, edítalo y desactívalo.`
-    )
-    if (!confirmed) return
-    const ok = await deleteProduct(productId)
-    if (ok) {
-      toast.success('Producto eliminado correctamente')
-    }
+    setConfirmTitle('Eliminar producto')
+    setConfirmMessage(`¿Eliminar definitivamente "${name}"? Si solo necesitas dejar de ofrecerlo, edítalo y desactívalo.`)
+    setConfirmAction(() => async () => {
+      setConfirmOpen(false)
+      const ok = await deleteProduct(productId)
+      if (ok) {
+        toast.success('Producto eliminado correctamente')
+      }
+    })
+    setConfirmOpen(true)
   }
 
   const handleOpenRequestModal = (product) => {
@@ -364,6 +371,16 @@ export default function ProductPage() {
           </div>
         </div>
       ) : null}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => { if (typeof confirmAction === 'function') confirmAction() }}
+        cancelLabel="Cancelar"
+        confirmLabel="Eliminar"
+        danger={true}
+      />
     </div>
   )
 }

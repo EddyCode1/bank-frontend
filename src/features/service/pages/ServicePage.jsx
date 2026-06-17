@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import useAuthStore from '../../auth/store/useAuthStore'
 import { isAdminUser } from '../../../shared/auth/roles'
 import { bankingClient } from '../../../shared/api/adminClient'
+import ConfirmModal from '../../../shared/components/ConfirmModal'
 import { accountService } from '../../account/service/accountService'
 
 function resolveApiError(error, fallback) {
@@ -37,6 +38,11 @@ export default function ServicePage() {
     reference: '',
     description: '',
   })
+
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -155,15 +161,19 @@ export default function ServicePage() {
   }
 
   const deleteService = async (service) => {
-    const confirmed = window.confirm(`¿Eliminar el servicio "${service.name}"?`)
-    if (!confirmed) return
-    try {
-      await bankingClient.delete(`/products/${service._id}`)
-      toast.success('Servicio eliminado')
-      await loadData()
-    } catch (error) {
-      toast.error(resolveApiError(error, 'No se pudo eliminar el servicio'))
-    }
+    setConfirmTitle('Eliminar servicio')
+    setConfirmMessage(`¿Eliminar el servicio "${service.name}"?`)
+    setConfirmAction(() => async () => {
+      setConfirmOpen(false)
+      try {
+        await bankingClient.delete(`/products/${service._id}`)
+        toast.success('Servicio eliminado')
+        await loadData()
+      } catch (error) {
+        toast.error(resolveApiError(error, 'No se pudo eliminar el servicio'))
+      }
+    })
+    setConfirmOpen(true)
   }
 
   const submitPayment = async (e) => {
@@ -605,6 +615,17 @@ export default function ServicePage() {
           </div>
         </div>
       ) : null}
+
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={confirmTitle}
+        message={confirmMessage}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => { if (typeof confirmAction === 'function') confirmAction() }}
+        cancelLabel="Cancelar"
+        confirmLabel="Eliminar"
+        danger={true}
+      />
     </div>
   )
 }

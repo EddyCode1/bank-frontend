@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUsers, createUser, updateUser, activateUser, deactivateUser, updateUserRole } from '../service/userService'
 import UserFormModal from '../components/UserFormModal'
+import ConfirmModal from '../../../shared/components/ConfirmModal'
 
 export default function UsersPage() {
     const navigate = useNavigate()
@@ -19,6 +20,10 @@ export default function UsersPage() {
     const [actionLoading, setActionLoading] = useState(false)
     const [notification, setNotification] = useState(null)
     const [formError, setFormError] = useState(null)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [confirmTitle, setConfirmTitle] = useState('')
+    const [confirmMessage, setConfirmMessage] = useState('')
+    const [confirmAction, setConfirmAction] = useState(null)
 
     const getUserStatus = (user) => (user?.status || 'active').toLowerCase()
     const normalizeRole = (role) => {
@@ -85,22 +90,30 @@ export default function UsersPage() {
 
     const toggleUserStatus = async (user) => {
         const nextStatus = (user.status || 'active').toLowerCase() === 'active' ? 'inactive' : 'active'
-        setActionLoading(true)
-        try {
-            const result = nextStatus === 'active'
-                ? await activateUser(user.id || user._id)
-                : await deactivateUser(user.id || user._id)
-            if (result.success) {
-                showNotification(`Usuario ${nextStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success')
-                loadUsers(currentPage)
-            } else {
-                showNotification(result.error || 'Error al cambiar estado', 'error')
+        setConfirmTitle(nextStatus === 'active' ? 'Activar usuario' : 'Desactivar usuario')
+        setConfirmMessage(
+            `Esta acción ${nextStatus === 'active' ? 'activará' : 'desactivará'} al usuario ${user.nombre || user.username || user.email}. ¿Deseas continuar?`
+        )
+        setConfirmAction(() => async () => {
+            setConfirmOpen(false)
+            setActionLoading(true)
+            try {
+                const result = nextStatus === 'active'
+                    ? await activateUser(user.id || user._id)
+                    : await deactivateUser(user.id || user._id)
+                if (result.success) {
+                    showNotification(`Usuario ${nextStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success')
+                    loadUsers(currentPage)
+                } else {
+                    showNotification(result.error || 'Error al cambiar estado', 'error')
+                }
+            } catch (error) {
+                showNotification(error.message || 'Error inesperado al cambiar estado', 'error')
+            } finally {
+                setActionLoading(false)
             }
-        } catch (error) {
-            showNotification(error.message || 'Error inesperado al cambiar estado', 'error')
-        } finally {
-            setActionLoading(false)
-        }
+        })
+        setConfirmOpen(true)
     }
 
     const handleActivateUser = async (user) => {
@@ -290,13 +303,7 @@ export default function UsersPage() {
                                                 Editar
                                             </button>
                                             <button
-                                                onClick={() => {
-                                                    if (getUserStatus(user) === 'active') {
-                                                        toggleUserStatus(user)
-                                                    } else {
-                                                        handleActivateUser(user)
-                                                    }
-                                                }}
+                                                onClick={() => toggleUserStatus(user)}
                                                 className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:opacity-90"
                                             >
                                                 {getUserStatus(user) === 'active' ? 'Desactivar' : 'Activar'}
@@ -340,6 +347,16 @@ export default function UsersPage() {
                 user={selectedUser}
                 isLoading={actionLoading}
                 submitError={formError}
+            />
+            <ConfirmModal
+                isOpen={confirmOpen}
+                title={confirmTitle}
+                message={confirmMessage}
+                onCancel={() => setConfirmOpen(false)}
+                onConfirm={() => { if (typeof confirmAction === 'function') confirmAction() }}
+                cancelLabel="Cancelar"
+                confirmLabel="Confirmar"
+                danger={true}
             />
         </div>
     )
